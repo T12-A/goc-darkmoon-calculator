@@ -197,9 +197,9 @@
   .match-row.best .rank { color: #d29922; }
   .match-row .top { display: flex; align-items: center; gap: 10px; }
   .match-row .rank { font-size: 15px; font-weight: 800; font-family: ui-monospace, Consolas, monospace; color: #8b949e; min-width: 22px; }
-  .match-row .who { flex: 1; min-width: 0; }
-  .match-row .who .nm { font-size: 13.5px; font-weight: 700; color: #e6edf3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
-  .match-row .who .pw { font-size: 11px; color: #6e7681; font-family: ui-monospace, Consolas, monospace; display: block; margin-top: 1px; }
+  .match-row .who { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .match-row .who .nm { font-size: 13.5px; font-weight: 700; color: #e6edf3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1 1 auto; min-width: 0; }
+  .match-row .who .pw { font-size: 11px; color: #6e7681; font-family: ui-monospace, Consolas, monospace; display: block; flex: 1 1 100%; margin-top: 1px; }
   .match-row .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .match-row .stat { background: #0d1117; border: 1px solid #21262d; border-radius: 9px; padding: 7px 8px; text-align: center; }
   .match-row .stat .l { font-size: 9.5px; color: #6e7681; text-transform: uppercase; letter-spacing: .06em; }
@@ -211,6 +211,29 @@
   .match-row .why { font-size: 10.5px; color: #6e7681; line-height: 1.45; }
   .match-row .why b { color: #8b949e; }
   .match-empty { padding: 26px; text-align: center; color: #8b949e; font-size: 13.5px; grid-column: 1 / -1; }
+
+  /* Battle plan — every station assigned, each team max 2 uses */
+  .match-plan { margin-top: 22px; }
+  .match-plan .plan-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+  .plan-btn { font: inherit; font-weight: 700; font-size: 12.5px; border-radius: 9px; padding: 7px 14px; cursor: pointer; border: 1px solid #30363d; background: #161b22; color: #c9d1d9; transition: all .15s ease; }
+  .plan-btn:hover { color: #fff; border-color: #58a6ff; }
+  .plan-summary { font-size: 12px; color: #8b949e; }
+  .plan-summary b { color: #c9d1d9; }
+  .plan-hint { font-size: 11.5px; color: #6e7681; margin: 0 0 12px; line-height: 1.55; max-width: 760px; }
+  .plan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 10px; }
+  .plan-row { display: flex; flex-direction: column; gap: 7px; background: #161b22; border: 1px solid #21262d; border-radius: 11px; padding: 12px; }
+  .plan-row .pr-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .plan-row .pr-def { font-size: 13px; font-weight: 700; color: #e6edf3; }
+  .plan-row .pr-arrow { color: #58a6ff; font-weight: 800; }
+  .plan-row .pr-att { font-size: 13px; font-weight: 700; color: #ffd479; }
+  .plan-row .pr-stats { display: flex; gap: 14px; flex-wrap: wrap; }
+  .plan-row .pr-stat { font-size: 11px; color: #8b949e; font-family: ui-monospace, Consolas, monospace; }
+  .plan-row .pr-stat b { color: #c9d1d9; }
+  .plan-row .pr-uses { margin-left: auto; font-size: 10px; font-weight: 800; border-radius: 999px; padding: 2px 9px; }
+  .uses-1 { color: #7cc2ff; background: rgba(74,168,255,.12); border: 1px solid rgba(74,168,255,.35); }
+  .uses-2 { color: #f85149; background: rgba(248,81,73,.12); border: 1px solid rgba(248,81,73,.35); }
+  .match-row .att-uses { margin-left: 6px; font-size: 9.5px; font-weight: 800; border-radius: 999px; padding: 1px 7px; vertical-align: 1px; }
+  .match-row.full { opacity: .5; }
 
   /* KO adjustment note */
   .adj-note { margin-top: 10px; padding: 8px 12px; border-radius: 9px; background: rgba(210,153,34,.08); border: 1px solid rgba(210,153,34,.3); font-size: 12px; color: #d29922; line-height: 1.6; }
@@ -424,6 +447,16 @@
         <span class="hint">Every Frostheim attacker is ranked against this defender by <b>KOs needed</b> (fewest = best). 🏆 marks the best counter. Click any card to load it into the VS calculator.</span>
       </div>
       <div class="matchup-grid" id="matchupGrid"></div>
+
+      <div class="match-plan">
+        <div class="plan-bar">
+          <span class="lbl">⚔️ Battle plan · every station</span>
+          <button type="button" class="plan-btn" onclick="renderBattlePlan()">🔄 Rebuild plan</button>
+          <span class="plan-summary" id="planSummary"></span>
+        </div>
+        <p class="plan-hint">Each Frostheim team can only be used <b>twice</b> across all Darkmoon stations. This plan spreads assignments across <b>every member</b> — the <b>strongest available</b> team is power-matched to the toughest station (fewest KOs needed), each team capped at <b>2 uses</b>. Teams shown at 2/2 are fully committed and get greyed out in the ranked list above.</p>
+        <div class="plan-grid" id="planGrid"></div>
+      </div>
     </section>
   </section>
 
@@ -850,7 +883,7 @@ function renderAll() {
   renderRefTable();
   renderHere();
   populateMatchDefSel();
-  if ($('tab-matchup') && $('tab-matchup').classList.contains('active')) renderMatchups();
+  if ($('tab-matchup') && $('tab-matchup').classList.contains('active')) { renderMatchups(); renderBattlePlan(); }
 }
 
 defSearch.addEventListener('input', e => { defFilter = e.target.value; renderAll(); });
@@ -1133,9 +1166,10 @@ function renderMatchups() {
     const why = [];
     if (res.mult !== 1) why.push('<b>×' + res.mult.toFixed(1) + ' element</b>');
     if (res.adjust && res.adjust.reasons.length) why.push(res.adjust.reasons.join(' · '));
-    return '<div class="match-row' + (i === 0 && t.adjKos !== null ? ' best' : '') + '" data-att="' + a.name.replace(/"/g, '&quot;') + '" title="Load ' + a.name + ' into the VS calculator">' +
+    const used = planUsage[a.name] || 0;
+    return '<div class="match-row' + (i === 0 && t.adjKos !== null ? ' best' : '') + (used >= 2 ? ' full' : '') + '" data-att="' + a.name.replace(/"/g, '&quot;') + '" title="Load ' + a.name + ' into the VS calculator">' +
       '<div class="top"><span class="rank">' + (i + 1) + '</span>' +
-      '<span class="who"><span class="nm">' + a.name + '</span>' + elChip(a.element) + '<span class="pw">team ' + fmt(a.team) + ' · card ' + fmt(a.card) + '</span></span></div>' +
+      '<span class="who"><span class="nm">' + a.name + '</span>' + (used ? '<span class="att-uses uses-' + (used >= 2 ? 2 : 1) + '">' + used + '/2</span>' : '') + elChip(a.element) + '<span class="pw">team ' + fmt(a.team) + ' · card ' + fmt(a.card) + '</span></span></div>' +
       '<div class="stats">' +
         '<div class="stat' + (win ? ' win' : ' deb') + '"><div class="l">Debuff</div><div class="v">' + debTxt + '</div></div>' +
         '<div class="stat kos"><div class="l">KOs</div><div class="v">' + kos + '</div></div>' +
@@ -1144,6 +1178,88 @@ function renderMatchups() {
       (why.length ? '<div class="why">' + why.join(' · ') + '</div>' : '') +
     '</div>';
   }).join('');
+}
+
+// Battle plan — assign every Darkmoon station a Frostheim attacker, each team
+// capped at 2 uses, spreading across ALL members (everyone gets a station).
+// Pass 1 gives each member its best station (strongest available power-matched to
+// the toughest stations first); pass 2 fills leftovers with second uses.
+let planUsage = {}; // attacker name -> uses in the current plan
+
+function bestAttackerFor(cands) {
+  if (!cands.length) return null;
+  cands.sort((x, y) => {
+    const kx = x.res.team.adjKos === null ? (x.res.team.kos === null ? Infinity : x.res.team.kos) : x.res.team.adjKos;
+    const ky = y.res.team.adjKos === null ? (y.res.team.kos === null ? Infinity : y.res.team.kos) : y.res.team.adjKos;
+    if (kx !== ky) return kx - ky;
+    const cx = x.res.card.adjKos === null ? (x.res.card.kos === null ? Infinity : x.res.card.kos) : x.res.card.adjKos;
+    const cy = y.res.card.adjKos === null ? (y.res.card.kos === null ? Infinity : y.res.card.kos) : y.res.card.adjKos;
+    if (cx !== cy) return cx - cy;
+    return (y.a.team || 0) - (x.a.team || 0);
+  });
+  return cands[0];
+}
+
+function buildBattlePlan() {
+  const usage = {};
+  const defs = [...ROSTER.defenders].sort((a, b) => (b.team || 0) - (a.team || 0));
+  const plan = [];
+  const taken = {};
+  // Pass 1 — every member gets one station: hardest stations first, each taking
+  // the best attacker that hasn't been used yet.
+  for (const def of defs) {
+    if (Object.keys(usage).length >= ROSTER.attackers.length) break;
+    const cands = ROSTER.attackers
+      .filter(a => !(usage[a.name]))
+      .map(a => ({ a, res: compute(a, def) }));
+    const pick = bestAttackerFor(cands);
+    if (!pick) break;
+    taken[def.name] = true;
+    usage[pick.a.name] = 1;
+    plan.push({ def, att: pick.a, res: pick.res });
+  }
+  // Pass 2 — leftover stations get a second use from the best remaining performer.
+  for (const def of defs) {
+    if (taken[def.name]) continue;
+    const cands = ROSTER.attackers
+      .filter(a => (usage[a.name] || 0) < 2)
+      .map(a => ({ a, res: compute(a, def) }));
+    const pick = bestAttackerFor(cands);
+    if (!pick) { plan.push({ def, att: null, res: null }); continue; }
+    usage[pick.a.name] = (usage[pick.a.name] || 0) + 1;
+    plan.push({ def, att: pick.a, res: pick.res });
+  }
+  planUsage = usage;
+  return plan;
+}
+
+function renderBattlePlan() {
+  const grid = $('planGrid');
+  if (!grid) return;
+  const plan = buildBattlePlan();
+  const used = Object.keys(planUsage).filter(n => planUsage[n] > 0).length;
+  const full = Object.keys(planUsage).filter(n => planUsage[n] >= 2).length;
+  $('planSummary').innerHTML = '<b>' + plan.length + '</b> stations assigned · <b>' + used + '</b> teams used · <b>' + full + '</b> at 2/2';
+  grid.innerHTML = plan.map(p => {
+    if (!p.att) return '<div class="plan-row"><div class="pr-top"><span class="pr-def">🛡 ' + p.def.name + '</span></div><div class="pr-stat">No available Frostheim team left</div></div>';
+    const t = p.res.team;
+    const deb = t.ratio === null ? '—' : (t.ratio * 100).toFixed(0) + '%';
+    const kos = t.adjKos === null ? (t.kos === null ? '—' : fmt(t.kos)) : fmt(t.adjKos);
+    const fod = t.adjFodder === null ? (t.fodder === null ? '—' : fmt(t.adjFodder)) : fmt(t.adjFodder);
+    const uses = planUsage[p.att.name] || 0;
+    return '<div class="plan-row"><div class="pr-top">' +
+      '<span class="pr-def">🛡 ' + p.def.name + '</span>' + elChip(p.def.element) +
+      '<span class="pr-arrow">→</span>' +
+      '<span class="pr-att">⚔️ ' + p.att.name + '</span>' + elChip(p.att.element) +
+      '<span class="pr-uses uses-' + (uses >= 2 ? 2 : 1) + '">' + uses + '/2</span></div>' +
+      '<div class="pr-stats">' +
+      '<span class="pr-stat">Debuff <b>' + deb + '</b></span>' +
+      '<span class="pr-stat">KOs <b>' + kos + '</b></span>' +
+      '<span class="pr-stat">Fodder <b>' + fod + '</b></span>' +
+      '<span class="pr-stat">⚡def <b>' + fmt(p.def.team) + '</b> · ⚔️atk <b>' + fmt(p.att.team) + '</b></span>' +
+      '</div></div>';
+  }).join('');
+  renderMatchups(); // refresh usage badges on ranked cards
 }
 matchDefSel.addEventListener('change', () => {
   const d = ROSTER.defenders.find(m => m.name === matchDefSel.value);
@@ -1166,7 +1282,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + btn.dataset.tab));
-    if (btn.dataset.tab === 'matchup') { populateMatchDefSel(); renderMatchups(); }
+    if (btn.dataset.tab === 'matchup') { populateMatchDefSel(); renderMatchups(); renderBattlePlan(); }
   });
 });
 
