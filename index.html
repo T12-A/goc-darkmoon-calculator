@@ -349,7 +349,7 @@
     <span class="rt atkP">P</span><span>= <b>P. ATK grade</b></span>
     <span class="rt atkS">S</span><span>= <b>S. ATK grade</b></span>
     <span class="rt tu">TU 45</span>
-    <span>= <b>True Speed</b> ⌊(1000−Speed)÷10⌋ — lower TU acts first.</span>
+    <span>= <b>Time Units</b> ⌊(1000−Speed)÷10⌋ — lower TU acts first.</span>
   </section>
 
   <section class="matchup">
@@ -424,7 +424,7 @@
       <span class="rt tierA">A</span> <span class="rt tierB">B</span> <span class="rt tierC">C</span> <span class="rt tierD">D</span>
       = <b>Case Tier</b> (A is the best case rating)<br>
       <span class="rt atkP">P</span> = <b>P. ATK grade</b> · <span class="rt atkS">S</span> = <b>S. ATK grade</b> — the character's attack stat grade<br>
-      <span class="rt tu">TU 45</span> = <b>True Speed / TU</b> — calculated as ⌊(1000 − Speed) ÷ 10⌋, the character's first-action time<br><br>
+      <span class="rt tu">TU 45</span> = <b>Time Units / TU</b> — calculated as ⌊(1000 − Speed) ÷ 10⌋, the character's time until its first action<br><br>
       Each identified card lists its <b>skills</b> (name · multiplier · TU · MP) and shows <b>special-skill badges</b> when present:<br>
       <span class="flag lifeflip">🔄 Life Flip</span> · <span class="flag stun">⚡ Stun</span> · <span class="flag sleep">💤 Sleep</span> · <span class="flag x6">💥 6x+ DMG</span><br><br>
       <b>KO adjustment:</b> the KO count is multiplied up when the <b>defender's</b> cards carry those special skills
@@ -559,7 +559,7 @@ function compute(attacker, defender) {
     card: { ratio: cardRatio, kos: cardKos, fodder: cardKos === null ? null : Math.round(cardKos / 6), adjKos: aCardKos, adjFodder: aCardKos === null ? null : Math.round(aCardKos / 6) }
   };
 }
-// True Speed: TU = floor((1000 - Speed) / 10)
+// Time Units: TU = floor((1000 - Speed) / 10)
 function tuOfSpeed(speed) {
   if (speed === null || speed === undefined || isNaN(speed)) return null;
   return Math.max(1, Math.floor((1000 - speed) / 10));
@@ -631,7 +631,7 @@ function rtAtk(a) {
 function rtTu(sp) {
   const tu = tuOfSpeed(sp);
   if (tu === null) return '';
-  return '<span class="rt tu" title="True Speed / TU — ⌊(1000−' + sp + ')÷10⌋ · lower TU = faster turn">TU ' + tu + '</span>';
+  return '<span class="rt tu" title="Time Units / TU — ⌊(1000−' + sp + ')÷10⌋ · lower TU = faster turn">TU ' + tu + '</span>';
 }
 
 // Speed comparison chip: lower TU = faster turn.
@@ -690,7 +690,7 @@ function renderCharCards(container, member, opponent) {
   container.innerHTML =
     '<button type="button" class="cards-toggle" aria-expanded="true" onclick="toggleCards(this)">' +
       '<span class="chev">▼</span> Identified cards (' + best.length + ')</button>' +
-    '<div class="cards-sub"><b>A/B/C/D</b> = Case Tier (A best) · <b>P/S</b> = ATK grade · <b>TU</b> = True Speed ⌊(1000−Speed)÷10⌋ — lower TU acts first</div>' +
+    '<div class="cards-sub"><b>A/B/C/D</b> = Case Tier (A best) · <b>P/S</b> = ATK grade · <b>TU</b> = Time Units ⌊(1000−Speed)÷10⌋ — lower TU acts first</div>' +
     '<div class="cards-body">' + html + '</div>';
 }
 
