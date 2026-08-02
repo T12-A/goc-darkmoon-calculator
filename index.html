@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GOC Darkmoon Calculator — Frostheim VS Darkmoon</title>
+<meta name="description" content="GOC battle-station calculator for the Darkmoon season — pick a Darkmoon defender and a Frostheim attacker, get the debuff %, KOs and fodder needed, with every member's identified character cards and Full Data ratings.">
+<meta name="theme-color" content="#140d20">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GOC Darkmoon Calculator">
+<meta property="og:title" content="GOC Darkmoon Calculator — Frostheim VS Darkmoon">
+<meta property="og:description" content="Live KOs &amp; debuff calculator for the Darkmoon battle station — identified characters, Full Data ratings, element matchups. No spreadsheet required.">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23140d20'/%3E%3Ctext x='32' y='43' font-size='30' text-anchor='middle'%3E%E2%9C%A8%3C/text%3E%3C/svg%3E">
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    background: radial-gradient(1400px 800px at 15% -10%, #35234a 0%, #140d20 48%, #0a0710 100%) fixed;
+    color: #e6edf3; min-height: 100vh; overflow-x: hidden;
+  }
+  .bg-glow { position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background: radial-gradient(600px 300px at 85% 0%, rgba(188,126,255,.1), transparent 60%),
+                radial-gradient(500px 300px at 10% 100%, rgba(88,166,255,.06), transparent 60%); }
+  .wrap { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; padding: 34px 20px 90px; }
+
+  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  h1 { font-size: 30px; margin: 0 0 6px; letter-spacing: -0.02em; font-weight: 800; }
+  h1 .accent { color: #bc7eff; }
+  .badge { display: inline-block; vertical-align: middle; margin-left: 10px; background: rgba(188,126,255,.12);
+    border: 1px solid rgba(188,126,255,.4); color: #bc7eff; border-radius: 999px; padding: 2px 12px; font-size: 11.5px;
+    font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+  p.sub { color: #8b949e; margin: 0; font-size: 14px; max-width: 680px; line-height: 1.55; }
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+  select, button, input[type=search] { font: inherit; color: #e6edf3; }
+  select, input[type=search] {
+    background: #161b22; border: 1px solid #30363d; border-radius: 9px; padding: 9px 12px; font-size: 13.5px;
+    outline: none; transition: border-color .15s, box-shadow .15s;
+  }
+  select:focus, input[type=search]:focus { border-color: #bc7eff; box-shadow: 0 0 0 3px rgba(188,126,255,.15); }
+  button {
+    background: linear-gradient(180deg, #21262d, #1a1f26); border: 1px solid #30363d; border-radius: 9px;
+    padding: 9px 16px; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: filter .15s, transform .15s, box-shadow .15s;
+  }
+  button:hover { filter: brightness(1.15); transform: translateY(-1px); }
+  button.primary { background: linear-gradient(180deg, #238636, #1f7a2f); border-color: #2ea043; }
+  button.primary:hover { box-shadow: 0 4px 16px rgba(46,160,67,.3); }
+  button.share { background: linear-gradient(180deg, #1f6feb, #195dc4); border-color: #388bfd; }
+  button.share:hover { box-shadow: 0 4px 16px rgba(56,139,253,.35); }
+  button.ghost { background: transparent; border-color: transparent; color: #8b949e; }
+  button.ghost:hover { color: #f85149; filter: none; }
+
+  .card { background: rgba(22,27,34,.88); border: 1px solid #21262d; border-radius: 16px; }
+  .card-title { font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: #8b949e; margin: 0 0 14px; }
+
+  .matchup { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; margin-top: 26px; align-items: stretch; }
+  .member-card { padding: 20px; position: relative; overflow: hidden; }
+  .member-card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; opacity: .9; }
+  .member-card.defending::before { background: linear-gradient(90deg, #bc7eff, #d29922); }
+  .member-card.attacking::before { background: linear-gradient(90deg, #3fb950, #58a6ff); }
+  .member-card .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 8px; flex-wrap: wrap; }
+  .member-card h2 { font-size: 15px; margin: 0; color: #e6edf3; }
+  .member-card h2 small { color: #8b949e; font-weight: 500; font-size: 12px; }
+  .search-wrap { position: relative; }
+  .search-wrap input { width: 100%; }
+  .roster { list-style: none; margin: 10px 0 0; padding: 0; max-height: 270px; overflow-y: auto; border: 1px solid #21262d; border-radius: 10px; }
+  .roster li { display: flex; align-items: center; gap: 10px; padding: 9px 12px; cursor: pointer; border-bottom: 1px solid #161b22; transition: background .12s; }
+  .roster li:last-child { border-bottom: none; }
+  .roster li:hover { background: rgba(188,126,255,.07); }
+  .roster li.active { background: rgba(188,126,255,.13); box-shadow: inset 2px 0 0 #bc7eff; }
+  .roster li .nm { flex: 1; font-size: 13.5px; font-weight: 600; }
+  .roster li .pw { font-size: 11.5px; color: #8b949e; font-family: ui-monospace, Consolas, monospace; }
+  .roster li .pw b { color: #c9d1d9; font-weight: 600; }
+  .roster .empty { padding: 14px; color: #8b949e; font-size: 13px; text-align: center; }
+
+  .el-chip { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 2px 10px; font-size: 11px; font-weight: 700; text-transform: capitalize; letter-spacing: .03em; }
+  .el-fire { background: rgba(255,107,74,.14); color: #ff9b85; border: 1px solid rgba(255,107,74,.4); }
+  .el-water { background: rgba(74,168,255,.14); color: #7cc2ff; border: 1px solid rgba(74,168,255,.4); }
+  .el-grass { background: rgba(74,208,122,.14); color: #7fe0a4; border: 1px solid rgba(74,208,122,.4); }
+  .el-unknown { background: rgba(139,148,158,.14); color: #8b949e; border: 1px solid rgba(139,148,158,.4); }
+
+  .member-summary { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat { background: #161b22; border: 1px solid #21262d; border-radius: 10px; padding: 10px 12px; }
+  .stat .lbl { font-size: 10.5px; color: #8b949e; text-transform: uppercase; letter-spacing: .06em; }
+  .stat .val { font-size: 17px; font-weight: 700; margin-top: 2px; font-family: ui-monospace, Consolas, monospace; color: #e6edf3; }
+
+  /* Identified characters */
+  .char-cards { grid-column: 1 / -1; }
+  .char-cards .lbl { font-size: 10.5px; color: #8b949e; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+  .char-card { display: flex; align-items: center; gap: 10px; background: #161b22; border: 1px solid #21262d; border-radius: 10px; padding: 8px 12px; margin-bottom: 8px; }
+  .char-card:last-child { margin-bottom: 0; }
+  .char-card .who { flex: 1; min-width: 0; }
+  .char-card .who b { font-size: 13px; color: #e6edf3; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .char-card .who span { font-size: 11.5px; color: #8b949e; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .char-card .pw { font-size: 12px; font-weight: 700; color: #c9d1d9; font-family: ui-monospace, Consolas, monospace; }
+  .rating { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; }
+  .rt { font-size: 10.5px; font-weight: 800; border-radius: 6px; padding: 2px 7px; letter-spacing: .02em; }
+  .rt.tierA { color: #ffd479; background: rgba(210,153,34,.16); border: 1px solid rgba(210,153,34,.45); }
+  .rt.tierB { color: #bc7eff; background: rgba(188,126,255,.14); border: 1px solid rgba(188,126,255,.4); }
+  .rt.tierC { color: #7cc2ff; background: rgba(74,168,255,.13); border: 1px solid rgba(74,168,255,.35); }
+  .rt.tierD { color: #8b949e; background: rgba(139,148,158,.13); border: 1px solid rgba(139,148,158,.3); }
+  .rt.atkP { color: #f85149; background: rgba(248,81,73,.13); border: 1px solid rgba(248,81,73,.4); }
+  .rt.atkS { color: #3fb950; background: rgba(63,185,80,.13); border: 1px solid rgba(63,185,80,.4); }
+  .rt.tu { color: #c9d1d9; background: rgba(139,148,158,.1); border: 1px solid rgba(139,148,158,.28); font-family: ui-monospace, Consolas, monospace; }
+  .char-card .nomatch { font-size: 11.5px; color: #6e7681; font-style: italic; }
+
+  .vs { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 0 2px; }
+  .vs .ring { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: #161b22; border: 1px solid #30363d; font-size: 13px; font-weight: 800; color: #8b949e; }
+
+  .elem-row { display: flex; align-items: center; gap: 14px; margin-top: 16px; padding: 14px 20px; flex-wrap: wrap; }
+  .elem-pair { display: flex; align-items: center; gap: 8px; }
+  .elem-pair .arrow { color: #8b949e; font-size: 15px; }
+  .mult { font-size: 13.5px; font-weight: 700; font-family: ui-monospace, Consolas, monospace; padding: 4px 12px; border-radius: 8px; }
+  .mult.adv { color: #3fb950; background: rgba(63,185,80,.12); border: 1px solid rgba(63,185,80,.4); }
+  .mult.neu { color: #8b949e; background: rgba(139,148,158,.1); border: 1px solid rgba(139,148,158,.3); }
+  .mult.dis { color: #f85149; background: rgba(248,81,73,.12); border: 1px solid rgba(248,81,73,.4); }
+  .elem-verdict { font-size: 13px; color: #8b949e; }
+
+  .results { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .result-card { padding: 22px 22px 20px; position: relative; overflow: hidden; }
+  .result-card .big { display: flex; align-items: baseline; gap: 6px; margin: 4px 0 14px; }
+  .result-card .big .pct { font-size: 46px; font-weight: 800; letter-spacing: -0.02em; line-height: 1; font-family: ui-monospace, Consolas, monospace; }
+  .result-card .big .unit { font-size: 18px; color: #8b949e; font-weight: 600; }
+  .result-card.win .pct { color: #3fb950; }
+  .result-card.debuff .pct { color: #d29922; }
+  .result-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tile { background: #161b22; border: 1px solid #21262d; border-radius: 12px; padding: 14px; text-align: center; transition: transform .15s, border-color .15s; }
+  .tile:hover { transform: translateY(-2px); border-color: #30363d; }
+  .tile .lbl { font-size: 10.5px; color: #8b949e; text-transform: uppercase; letter-spacing: .07em; }
+  .tile .num { font-size: 28px; font-weight: 800; margin-top: 4px; font-family: ui-monospace, Consolas, monospace; color: #e6edf3; }
+  .tile.kos .num { color: #d29922; }
+  .tile.fodder .num { color: #58a6ff; }
+  .tile .sub { font-size: 11px; color: #6e7681; margin-top: 2px; }
+  .verdict { margin-top: 14px; padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; display: none; }
+  .verdict.show { display: block; }
+  .verdict.yes { background: rgba(63,185,80,.1); border: 1px solid rgba(63,185,80,.35); color: #3fb950; }
+  .verdict.no { background: rgba(210,153,34,.1); border: 1px solid rgba(210,153,34,.35); color: #d29922; }
+
+  details.ref { margin-top: 16px; }
+  details.ref summary { cursor: pointer; padding: 14px 20px; font-size: 14px; font-weight: 600; color: #c9d1d9; list-style: none; }
+  details.ref summary::-webkit-details-marker { display: none; }
+  details.ref summary::after { content: "▾"; float: right; color: #8b949e; transition: transform .2s; }
+  details.ref[open] summary::after { transform: rotate(180deg); }
+  .ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; padding: 0 20px 20px; }
+  .ref-cell { background: #161b22; border: 1px solid #21262d; border-radius: 9px; padding: 8px 10px; font-size: 12px; text-align: center; }
+  .ref-cell b { display: block; font-size: 13.5px; font-family: ui-monospace, Consolas, monospace; }
+  .ref-cell .r { color: #d29922; } .ref-cell .k { color: #c9d1d9; } .ref-cell .f { color: #58a6ff; }
+
+  details.legend { margin-top: 16px; }
+  details.legend summary { cursor: pointer; padding: 14px 20px; font-size: 14px; font-weight: 600; color: #c9d1d9; list-style: none; }
+  details.legend summary::-webkit-details-marker { display: none; }
+  details.legend summary::after { content: "▾"; float: right; color: #8b949e; transition: transform .2s; }
+  details.legend[open] summary::after { transform: rotate(180deg); }
+  .legend-body { padding: 0 20px 20px; font-size: 13px; color: #8b949e; line-height: 1.7; }
+  .legend-body b { color: #c9d1d9; }
+  .legend-body .rt { vertical-align: 1px; margin-right: 2px; }
+
+  .import-card { margin-top: 16px; padding: 20px; }
+  .drop { border: 2px dashed #30363d; border-radius: 12px; padding: 24px; text-align: center; transition: border-color .2s, background .2s; cursor: pointer; }
+  .drop:hover, .drop.over { border-color: #bc7eff; background: rgba(188,126,255,.05); }
+  .drop .big { font-size: 28px; }
+  .drop .t { font-size: 14px; font-weight: 600; margin-top: 6px; }
+  .drop .h { color: #8b949e; font-size: 12.5px; margin-top: 3px; }
+  .import-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+  .import-meta .who { font-size: 12.5px; color: #8b949e; }
+  .import-meta .who b { color: #c9d1d9; }
+  #importStatus { font-size: 13px; margin-top: 10px; }
+  #importStatus.ok { color: #3fb950; } #importStatus.err { color: #f85149; }
+
+  footer { margin-top: 34px; color: #6e7681; font-size: 12px; text-align: center; line-height: 1.7; }
+  footer b { color: #8b949e; }
+  footer a { color: #58a6ff; text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 860px) {
+    .matchup { grid-template-columns: 1fr; }
+    .vs { flex-direction: row; }
+    .results { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>GOC <span class="accent">Darkmoon Calculator</span><span class="badge">Frostheim VS Darkmoon</span></h1>
+      <p class="sub">Pick a <b>Darkmoon defender</b> and a <b>Frostheim attacker</b> — the calculator applies element advantage, gives the exact debuff % you need with KOs and fodder, and shows each member's identified character cards rated with the Tokyo Debunker Full Data system (Case Tier · ATK grade · Speed → TU).</p>
+    </div>
+    <div class="toolbar">
+      <button id="importBtn" class="primary" title="Load the latest Darkmoon / Frostheim rosters from your updated workbook">⬆ Import from Excel</button>
+      <button id="shareBtn" class="share" title="Copy the live link to share with guildmates">🔗 Share</button>
+      <button id="resetBtn" class="ghost" title="Reset to the built-in roster">Reset</button>
+    </div>
+  </header>
+
+  <section class="matchup">
+    <div class="card member-card defending">
+      <div class="head">
+        <h2>🛡 Darkmoon Defender <small>· updated 7/11</small></h2>
+      </div>
+      <div class="search-wrap"><input type="search" id="defSearch" placeholder="Search defender…"></div>
+      <ul class="roster" id="defRoster"></ul>
+      <div class="member-summary" id="defSummary"></div>
+    </div>
+
+    <div class="vs"><div class="ring">VS</div></div>
+
+    <div class="card member-card attacking">
+      <div class="head">
+        <h2>⚔️ Frostheim Attacker <small>· updated 8/1</small></h2>
+      </div>
+      <div class="search-wrap"><input type="search" id="attSearch" placeholder="Search attacker…"></div>
+      <ul class="roster" id="attRoster"></ul>
+      <div class="member-summary" id="attSummary"></div>
+    </div>
+  </section>
+
+  <section class="card elem-row" id="elemRow"></section>
+
+  <section class="results">
+    <div class="card result-card" id="teamCard">
+      <p class="card-title">Team Power · needs debuff</p>
+      <div id="teamBody"></div>
+    </div>
+    <div class="card result-card" id="cardCard">
+      <p class="card-title">Main Card Power · needs debuff</p>
+      <div id="cardBody"></div>
+    </div>
+  </section>
+
+  <details class="card ref">
+    <summary>📊 Debuff reference table (debuff % → KOs → fodder)</summary>
+    <div class="ref-grid" id="refGrid"></div>
+  </details>
+
+  <section class="card import-card">
+    <p class="card-title">Keep the rosters fresh — import your updated workbook</p>
+    <div class="drop" id="drop">
+      <div class="big">📁</div>
+      <div class="t">Drop your “my GOC Stats” xlsx here</div>
+      <div class="h">or click to choose the file — the Darkmoon &amp; Frostheim sheets load with all characters re-matched and saved locally</div>
+    </div>
+    <div class="import-meta">
+      <span class="who" id="dataWho">Built-in roster (updated 7/11 · 8/1)</span>
+      <span class="who" id="rosterCount"></span>
+    </div>
+    <div id="importStatus"></div>
+  </section>
+
+  <details class="card legend">
+    <summary>🏷️ How the character ratings work</summary>
+    <div class="legend-body">
+      Every member's <b>best cards</b> from the Darkmoon / Frostheim sheets are matched to the official
+      <a href="https://tokyodebunker.miraheze.org/wiki/List_of_Character_Cards" target="_blank" rel="noopener">List of Character Cards</a>
+      and rated with the <b>Tokyo Debunker Full Data</b> system:<br><br>
+      <span class="rt tierA">A</span> <span class="rt tierB">B</span> <span class="rt tierC">C</span> <span class="rt tierD">D</span>
+      = <b>Case Tier</b> (A is the best case rating)<br>
+      <span class="rt atkP">P</span> = <b>P. ATK grade</b> · <span class="rt atkS">S</span> = <b>S. ATK grade</b> — the character's attack stat grade<br>
+      <span class="rt tu">TU 45</span> = <b>True Speed / TU</b> — calculated as ⌊(1000 − Speed) ÷ 10⌋, the character's first-action time<br><br>
+      Rows in <span class="el-chip el-fire">● fire</span> <span class="el-chip el-water">● water</span> <span class="el-chip el-grass">● grass</span> show the member's
+      element and power. <i>No match</i> entries are cards the sheet didn't name fully enough to identify.
+    </div>
+  </details>
+
+  <input type="file" id="fileInput" accept=".xlsx,.xls" hidden>
+
+  <footer>
+    Computes <b>debuff = ⌈ max(0, 1 − (attacker power × element multiplier) ÷ defender power) ⌉</b> rounded up to the nearest 5%.<br>
+    Element advantage ×1.2 · disadvantage ×0.8 · KOs = debuff × 480 · fodder = KOs ÷ 6 — identical math to the spreadsheet's AC4:AE table.<br>
+    Character identification &amp; ratings from the <a href="https://tokyodebunker.miraheze.org/wiki/List_of_Character_Cards" target="_blank" rel="noopener">Tokyo Debunker Wiki</a> and the Tokyo Debunker Full Data.
+  </footer>
+</div>
+
+<script>
+/* ============================== DATA ============================== */
+// Element rules: X beats Y (×1.2), X is weak to Z (×0.8)
+const ELEMENT = {
+  fire:  { beats: 'grass', weak: 'water' },
+  grass: { beats: 'water', weak: 'fire'  },
+  water: { beats: 'fire',  weak: 'grass' }
+};
+
+// Extracted from "my GOC Stats (4).xlsx" — Darkmoon sheet (defenders) + Frostheim sheet (attackers),
+// with each member's best-card characters matched to the official List of Character Cards
+// and rated from the Tokyo Debunker Full Data (tier, ATK grade, Speed → TU).
+const ROSTER = {"station": "Darkmoon Ahh Battle Station", "updated": "7/11/26", "defenders": [{"name": "River 1", "team": 31397544, "card": 16474014, "element": "fire", "best": [{"raw": "Rui 16m", "first": "Rui", "power": 16000000, "matched": {"card": "Monochromatic Yearning Rui", "tier": "A", "atk": "P", "speed": 439, "type": "Charge", "passive": "Sleep Entry"}}, {"raw": "Leo 4.9 m", "first": "Leo", "power": 4900000, "matched": {"card": "Colored Chaos Leo", "tier": "A", "atk": "P", "speed": 503, "type": "Guard", "passive": "Endurance"}}, {"raw": "Jin - 8.5m", "first": "Jin", "power": 8500000, "matched": {"card": "Frozen Melody Jin", "tier": "A", "atk": "P", "speed": 487, "type": "Charge", "passive": "Endurance"}}], "skills": "life flip"}, {"name": "River 2", "team": 25493171, "card": 25160012, "element": "water", "best": [{"raw": "Jiro", "first": "Jiro", "power": null, "matched": {"card": "Reanimated Monster Jiro", "tier": "A", "atk": "P", "speed": 444, "type": "Survivor", "passive": "Poison Revenge"}}, {"raw": "Thoma 65 k", "first": "Thoma", "power": 65000, "matched": {"card": "Postmortem Punishment Tohma", "tier": "A", "atk": "S", "speed": 319, "type": "Guard", "passive": "Sleep Revenge++"}}], "skills": "life flip, endurance"}, {"name": "River 3", "team": 16692105, "card": 8393377, "element": "grass", "best": [], "skills": ""}, {"name": "Lemon", "team": 23021609, "card": 10570998, "element": "grass", "best": [{"raw": "Rui 10 m", "first": "Rui", "power": 10000000, "matched": {"card": "Monochromatic Yearning Rui", "tier": "A", "atk": "P", "speed": 439, "type": "Charge", "passive": "Sleep Entry"}}, {"raw": "Jo - 8.3m", "first": "Jo", "power": 8300000, "matched": {"card": "Phantom Enigma Jo", "tier": "A", "atk": "P", "speed": 435, "type": "Survivor", "passive": "Auto Full DEF Boost"}}], "skills": "Life flip"}, {"name": "JoJo", "team": 19548540, "card": 14421479, "element": "grass", "best": [{"raw": "Ed", "first": "Ed", "power": null, "matched": {"card": "Oneiric Trap Edward", "tier": "A", "atk": "P", "speed": 228, "type": "Charge", "passive": "Auto MP+2"}}, {"raw": "Shion - 4.7m", "first": "Shion", "power": 4700000, "matched": {"card": "The Moon Shion", "tier": "B", "atk": "P", "speed": 384, "type": "Curse", "passive": "Auto MP+2"}}], "skills": ""}, {"name": "Nikalodean", "team": 17603901, "card": 10194279, "element": "fire", "best": [{"raw": "Leo", "first": "Leo", "power": null, "matched": {"card": "Colored Chaos Leo", "tier": "A", "atk": "P", "speed": 503, "type": "Guard", "passive": "Endurance"}}, {"raw": "Subaru 7.6 m", "first": "Subaru", "power": 7600000, "matched": {"card": "Swirling Stars Subaru", "tier": "A", "atk": "P", "speed": 388, "type": "Charge", "passive": "Auto MP+2"}}], "skills": ""}, {"name": "Alyria 1", "team": 25720169, "card": 13967117, "element": "grass", "best": [{"raw": "subaru 13m", "first": "subaru", "power": 13000000, "matched": {"card": "Swirling Stars Subaru", "tier": "A", "atk": "P", "speed": 388, "type": "Charge", "passive": "Auto MP+2"}}], "skills": "stun"}, {"name": "Alyria 2", "team": 6760891, "card": 6006382, "element": "fire", "best": [{"raw": "Shohei 6m", "first": "Shohei", "power": 6000000, "matched": {"card": "Lawless Charmer Shohei", "tier": "A", "atk": "P", "speed": 501, "type": "Survivor", "passive": "Poison Revenge"}}, {"raw": "Leo 496 k", "first": "Leo", "power": 496000, "matched": {"card": "Colored Chaos Leo", "tier": "A", "atk": "P", "speed": 503, "type": "Guard", "passive": "Endurance"}}], "skills": ""}, {"name": "Alyeria 3", "team": 5787125, "card": 5129013, "element": "water", "best": [{"raw": "shion  5.1", "first": "shion", "power": 5100000, "matched": {"card": "The Moon Shion", "tier": "B", "atk": "P", "speed": 384, "type": "Curse", "passive": "Auto MP+2"}}, {"raw": "Rui 81k", "first": "Rui", "power": 81000, "matched": {"card": "Monochromatic Yearning Rui", "tier": "A", "atk": "P", "speed": 439, "type": "Charge", "passive": "Sleep Entry"}}], "skills": ""}, {"name": "Nix", "team": 11011873, "card": 8103478, "element": "water", "best": [{"raw": "Tohma", "first": "Tohma", "power": null, "matched": {"card": "Postmortem Punishment Tohma", "tier": "A", "atk": "S", "speed": 319, "type": "Guard", "passive": "Sleep Revenge++"}}, {"raw": "Kaito 815 k", "first": "Kaito", "power": 815000, "matched": {"card": "Sunken Memories Kaito", "tier": "A", "atk": "P", "speed": 196, "type": "Charge", "passive": "Endurance"}}], "skills": ""}, {"name": "LittleNike", "team": 10995190, "card": 8419130, "element": "fire", "best": [{"raw": "Ritsu", "first": "Ritsu", "power": null, "matched": {"card": "Operatic Aficionado Ritsu", "tier": "A", "atk": "P", "speed": 402, "type": "Survivor", "passive": "Slow Revenge"}}, {"raw": "Sho 1.5m", "first": "Sho", "power": 1500000, "matched": {"card": "Lawless Charmer Shohei", "tier": "A", "atk": "P", "speed": 501, "type": "Survivor", "passive": "Poison Revenge"}}], "skills": "1.0"}, {"name": "Joni", "team": 10143600, "card": 5637117, "element": "fire", "best": [{"raw": "Yuri", "first": "Yuri", "power": null, "matched": {"card": "Plague Doctor Yuri", "tier": "A", "atk": "P", "speed": 466, "type": "Charge", "passive": "Endurance"}}, {"raw": "Shhohei 1.1m", "first": "Shhohei", "power": 1100000, "matched": {"card": "Lawless Charmer Shohei", "tier": "A", "atk": "P", "speed": 501, "type": "Survivor", "passive": "Poison Revenge"}}], "skills": ""}, {"name": "vonchan", "team": 9804286, "card": 7277720, "element": "grass", "best": [{"raw": "Lucas", "first": "Lucas", "power": null, "matched": {"card": "The Chariot Lucas", "tier": "A", "atk": "S", "speed": 346, "type": "Guard", "passive": "Endurance"}}, {"raw": "SR Zenji 540 k", "first": "SR Zenji", "power": 540000, "matched": null}], "skills": ""}, {"name": "Juniper", "team": 9600367, "card": 7214962, "element": "fire", "best": [{"raw": "Jiro", "first": "Jiro", "power": null, "matched": {"card": "Reanimated Monster Jiro", "tier": "A", "atk": "P", "speed": 444, "type": "Survivor", "passive": "Poison Revenge"}}, {"raw": "Lyca 1.1m", "first": "Lyca", "power": 1100000, "matched": {"card": "Gulliver's Table Lyca", "tier": "A", "atk": "P", "speed": 238, "type": "Survivor", "passive": "Slow Entry"}}], "skills": "life flip"}, {"name": "Dark Nix", "team": 9786793, "card": 9546073, "element": "grass", "best": [{"raw": "Rui", "first": "Rui", "power": null, "matched": {"card": "Monochromatic Yearning Rui", "tier": "A", "atk": "P", "speed": 439, "type": "Charge", "passive": "Sleep Entry"}}, {"raw": "Subaru 338 k", "first": "Subaru", "power": 338000, "matched": {"card": "Swirling Stars Subaru", "tier": "A", "atk": "P", "speed": 388, "type": "Charge", "passive": "Auto MP+2"}}], "skills": ""}, {"name": "Leo'zLover", "team": 7605805, "card": 7271489, "element": "water", "best": [{"raw": "Leo", "first": "Leo", "power": null, "matched": {"card": "Colored Chaos Leo", "tier": "A", "atk": "P", "speed": 503, "type": "Guard", "passive": "Endurance"}}, {"raw": "SR Edward 116k", "first": "SR Edward", "power": 116000, "matched": null}], "skills": ""}, {"name": "Vartiainen", "team": 7236048, "card": 6288659, "element": "grass", "best": [], "skills": ""}, {"name": "FamingoQueen", "team": 6738478, "card": 3827563, "element": "water", "best": [{"raw": "Shohei", "first": "Shohei", "power": null, "matched": {"card": "Lawless Charmer Shohei", "tier": "A", "atk": "P", "speed": 501, "type": "Survivor", "passive": "Poison Revenge"}}, {"raw": "Romeo 597 k", "first": "Romeo", "power": 597000, "matched": {"card": "Gambling Sniper Romeo", "tier": "A", "atk": "P", "speed": 443, "type": "Charge", "passive": "Endurance"}}], "skills": ""}, {"name": "Hyuluna", "team": 4938791, "card": 3202736, "element": "water", "best": [{"raw": "Leo", "first": "Leo", "power": null, "matched": {"card": "Colored Chaos Leo", "tier": "A", "atk": "P", "speed": 503, "type": "Guard", "passive": "Endurance"}}, {"raw": "Yuri 388 k", "first": "Yuri", "power": 388000, "matched": {"card": "Plague Doctor Yuri", "tier": "A", "atk": "P", "speed": 466, "type": "Charge", "passive": "Endurance"}}], "skills": ""}, {"name": "Requiemforbean", "team": 7035493, "card": 4985400, "element": "water", "best": [{"raw": "Taiga", "first": "Taiga", "power": null, "matched": {"card": "Distorted Heart Taiga", "tier": "A", "atk": "P", "speed": 389, "type": "Guard", "passive": "Sleep Revenge++"}}, {"raw": "Lyca 393 k", "first": "Lyca", "power": 393000, "matched": {"card": "Gulliver's Table Lyca", "tier": "A", "atk": "P", "speed": 238, "type": "Survivor", "passive": "Slow Entry"}}], "skills": ""}, {"name": "Sakuya_Senpai", "team": 5124589, "card": 1884812, "element": "fire", "best": [{"raw": "Jiro", "first": "Jiro", "power": null, "matched": {"card": "Reanimated Monster Jiro", "tier": "A", "atk": "P", "speed": 444, "type": "Survivor", "passive": "Poison Revenge"}}, {"raw": "Tohma 400 k", "first": "Tohma", "power": 400000, "matched": {"card": "Postmortem Punishment Tohma", "tier": "A", "atk": "S", "speed": 319, "type": "Guard", "passive": "Sleep Revenge++"}}], "skills": ""}, {"name": "Samhwain", "team": 3478126, "card": 1491611, "element": "grass", "best": [{"raw": "Shohei", "first": "Shohei", "power": null, "matched": {"card": "Lawless Charmer Shohei", "tier": "A", "atk": "P", "speed": 501, "type": "Survivor", "passive": "Poison Revenge"}}, {"raw": "Zenji 317 k", "first": "Zenji", "power": 317000, "matched": {"card": "The Knight of Cups Zenji", "tier": "A", "atk": "P", "speed": 472, "type": "Guard", "passive": "Endurance"}}], "skills": ""}, {"name": "Valley", "team": 3446318, "card": 1716987, "element": "water", "best": [], "skills": ""}, {"name": "Mimi", "team": 3585610, "card": 2547663, "element": "fire", "best": [{"raw": "Subaru", "first": "Subaru", "power": null, "matched": {"card": "Swirling Stars Subaru", "tier": "A", "atk": "P", "speed": 388, "type": "Charge", "passive": "Auto MP+2"}}, {"raw": "Rui 465 k", "first": "Rui", "power": 465000, "matched": {"card": "Monochromatic Yearning Rui", "tier": "A", "atk": "P", "speed": 439, "type": "Charge", "passive": "Sleep Entry"}}], "skills": ""}, {"name": "lizziebean", "team": 3212504, "card": 1732945, "element": "fire", "best": [{"raw": "Yuri", "first": "Yuri", "power": null, "matched": {"card": "Plague Doctor Yuri", "tier": "A", "atk": "P", "speed": 466, "type": "Charge", "passive": "Endurance"}}, {"raw": "Tohma 607 k", "first": "Tohma", "power": 607000, "matched": {"card": "Postmortem Punishment Tohma", "tier": "A", "atk": "S", "speed": 319, "type": "Guard", "passive": "Sleep Revenge++"}}], "skills": ""}, {"name": "Yella", "team": 3809069, "card": 1173316, "element": "fire", "best": [], "skills": ""}, {"name": "MonkeyDLuffy", "team": 2591424, "card": 1288977, "element": "water", "best": [], "skills": ""}, {"name": "Aridane", "team": 2733739, "card": 1448688, "element": "grass", "best": [], "skills": ""}, {"name": "Baby Jo", "team": 4824734, "card": 2810626, "element": "grass", "best": [], "skills": ""}, {"name": "rwiznerd", "team": 2579417, "card": 1388930, "element": "grass", "best": [{"raw": "Alan", "first": "Alan", "power": null, "matched": {"card": "Nighttime Soak Alan", "tier": "A", "atk": "P", "speed": 286, "type": "Curse", "passive": "Auto Full DEF Boost"}}, {"raw": "Tohma 260 k", "first": "Tohma", "power": 260000, "matched": {"card": "Postmortem Punishment Tohma", "tier": "A", "atk": "S", "speed": 319, "type": "Guard", "passive": "Sleep Revenge++"}}], "skills": ""}, {"name": "Mistryst", "team": 2348861, "card": 2066865, "element": "water", "best": [{"raw": "Jo", "first": "Jo", "power": null, "matched": {"card": "Phantom Enigma Jo", "tier": "A", "atk": "P", "speed": 435, "type": "Survivor", "passive": "Auto Full DEF Boost"}}], "skills": ""}, {"name": "Jessarose", "team": 2357115, "card": 671707, "element": "grass", "best": [], "skills": ""}, {"name": "Mello", "team": 2210327, "card": 1131382, "element": "fire", "best": [{"raw": "Jiro", "first": "Jiro", "power": null, "matched": {"card": "Reanimated Monster Jiro", "tier": "A", "atk": "P", "speed": 444, "type": "Survivor", "passive": "Poison Revenge"}}, {"raw": "Rui 277 k", "first": "Rui", "power": 277000, "matched": {"card": "Monochromatic Yearning Rui", "tier": "A", "atk": "P", "speed": 439, "type": "Charge", "passive": "Sleep Entry"}}], "skills": ""}, {"name": "Marie", "team": 2235190, "card": 1230810, "element": "fire", "best": [], "skills": ""}, {"name": "Sam", "team": 1665305, "card": 557578, "element": "grass", "best": [], "skills": ""}, {"name": "izzabeez", "team": 1612696, "card": 404454, "element": "water", "best": [], "skills": ""}, {"name": "ninjaXtowa", "team": 1471010, "card": 1002949, "element": "fire", "best": [{"raw": "Haku", "first": "Haku", "power": null, "matched": {"card": "Riverside Gloaming Haku", "tier": "A", "atk": "P", "speed": 416, "type": "Survivor", "passive": "Endurance"}}, {"raw": "SR Towa", "first": "SR Towa", "power": null, "matched": null}], "skills": ""}, {"name": "DarkJune", "team": 1556584, "card": 1378501, "element": "water", "best": [{"raw": "Lyca", "first": "Lyca", "power": null, "matched": {"card": "Gulliver's Table Lyca", "tier": "A", "atk": "P", "speed": 238, "type": "Survivor", "passive": "Slow Entry"}}], "skills": ""}, {"name": "thetorturechair", "team": 1438535, "card": 840141, "element": "water", "best": [], "skills": ""}, {"name": "lawfulbirch", "team": 1229666, "card": 426114, "element": "grass", "best": [{"raw": "Rui", "first": "Rui", "power": null, "matched": {"card": "Monochromatic Yearning Rui", "tier": "A", "atk": "P", "speed": 439, "type": "Charge", "passive": "Sleep Entry"}}], "skills": ""}, {"name": "Crona", "team": 1207991, "card": 553868, "element": "grass", "best": [{"raw": "Shohei", "first": "Shohei", "power": null, "matched": {"card": "Lawless Charmer Shohei", "tier": "A", "atk": "P", "speed": 501, "type": "Survivor", "passive": "Poison Revenge"}}, {"raw": "Jo 40 k", "first": "Jo", "power": 40000, "matched": {"card": "Phantom Enigma Jo", "tier": "A", "atk": "P", "speed": 435, "type": "Survivor", "passive": "Auto Full DEF Boost"}}], "skills": ""}, {"name": "gamie", "team": 1215625, "card": 770126, "element": "fire", "best": [{"raw": "Jiro", "first": "Jiro", "power": null, "matched": {"card": "Reanimated Monster Jiro", "tier": "A", "atk": "P", "speed": 444, "type": "Survivor", "passive": "Poison Revenge"}}, {"raw": "SR Jiro 212 k", "first": "SR Jiro", "power": 212000, "matched": null}], "skills": ""}, {"name": "Shu", "team": 868073, "card": 371647, "element": "water", "best": [{"raw": "Taiga", "first": "Taiga", "power": null, "matched": {"card": "Distorted Heart Taiga", "tier": "A", "atk": "P", "speed": 389, "type": "Guard", "passive": "Sleep Revenge++"}}, {"raw": "Jiro 125 k", "first": "Jiro", "power": 125000, "matched": {"card": "Reanimated Monster Jiro", "tier": "A", "atk": "P", "speed": 444, "type": "Survivor", "passive": "Poison Revenge"}}], "skills": ""}, {"name": "Dayannaw", "team": 790883, "card": 210267, "element": "water", "best": [{"raw": "Taiga - SR", "first": "Taiga - SR", "power": null, "matched": null}, {"raw": "Lyca 145 k", "first": "Lyca", "power": 145000, "matched": {"card": "Gulliver's Table Lyca", "tier": "A", "atk": "P", "speed": 238, "type": "Survivor", "passive": "Slow Entry"}}], "skills": ""}, {"name": "Saori", "team": 780444, "card": 164616, "element": "fire", "best": [{"raw": "Haku", "first": "Haku", "power": null, "matched": {"card": "Riverside Gloaming Haku", "tier": "A", "atk": "P", "speed": 416, "type": "Survivor", "passive": "Endurance"}}, {"raw": "Subaru 95 k", "first": "Subaru", "power": 95000, "matched": {"card": "Swirling Stars Subaru", "tier": "A", "atk": "P", "speed": 388, "type": "Charge", "passive": "Auto MP+2"}}], "skills": ""}, {"name": "sho haizo", "team": 552571, "card": 186984, "element": "fire", "best": [], "skills": ""}, {"name": "vienne", "team": 505072, "card": 311564, "element": "fire", "best": [], "skills": ""}, {"name": "alyria goc", "team": 23000000, "card": 11967117, "element": "grass", "best": [], "skills": ""}], "attackers": [{"name": "Destrena", "team": 32174284, "card": 17061666, "element": "grass", "best": [{"raw": "Jiro 14 m", "first": "Jiro", "power": 14000000, "matched": {"card": "Reanimated Monster Jiro", "tier": "A", "atk": "P", "speed": 444, "type": "Survivor", "passive": "Poison Revenge"}}, {"raw": "Zenji 8.9", "first": "Zenji", "power": 8900000, "matched": {"card": "The Knight of Cups Zenji", "tier": "A", "atk": "P", "speed": 472, "type": "Guard", "passive": "Endurance"}}]}, {"name": "FrostyCupOfTea", "team": 21217000, "card": 15740792, "element": "water", "best": [{"raw": "Thoma 14 m", "first": "Thoma", "power": 14000000, "matched": {"card": "Postmortem Punishment Tohma", "tier": "A", "atk": "S", "speed": 319, "type": "Guard", "passive": "Sleep Revenge++"}}, {"raw": "Lucas 2.2 m", "first": "Lucas", "power": 2200000, "matched": {"card": "The Chariot Lucas", "tier": "A", "atk": "S", "speed": 346, "type": "Guard", "passive": "Endurance"}}]}, {"name": "Scarlet", "team": 13917762, "card": 8847380, "element": "grass", "best": [{"raw": "Romeo 7.3 m", "first": "Romeo", "power": 7300000, "matched": {"card": "Gambling Sniper Romeo", "tier": "A", "atk": "P", "speed": 443, "type": "Charge", "passive": "Endurance"}}, {"raw": "Towa 1.3m", "first": "Towa", "power": 1300000, "matched": {"card": "Silent Vow Towa", "tier": "A", "atk": "P", "speed": 175, "type": "Curse", "passive": "Auto MP+2"}}]}, {"name": "Cates", "team": 11916335, "card": 9827336, "element": "grass", "best": [{"raw": "Romeo 3.1", "first": "Romeo", "power": 3100000, "matched": {"card": "Gambling Sniper Romeo", "tier": "A", "atk": "P", "speed": 443, "type": "Charge", "passive": "Endurance"}}, {"raw": "Shion 1.1 m", "first": "Shion", "power": 1100000, "matched": {"card": "The Moon Shion", "tier": "B", "atk": "P", "speed": 384, "type": "Curse", "passive": "Auto MP+2"}}]}, {"name": "Fantastic Fencer", "team": 10145841, "card": 6126106, "element": "water", "best": [{"raw": "Jin 4.6 m", "first": "Jin", "power": 4600000, "matched": {"card": "Frozen Melody Jin", "tier": "A", "atk": "P", "speed": 487, "type": "Charge", "passive": "Endurance"}}, {"raw": "Rui 1.2m", "first": "Rui", "power": 1200000, "matched": {"card": "Monochromatic Yearning Rui", "tier": "A", "atk": "P", "speed": 439, "type": "Charge", "passive": "Sleep Entry"}}]}, {"name": "Kajon", "team": 9550579, "card": 5333670, "element": "fire", "best": [{"raw": "Jin 3.1 m", "first": "Jin", "power": 3100000, "matched": {"card": "Frozen Melody Jin", "tier": "A", "atk": "P", "speed": 487, "type": "Charge", "passive": "Endurance"}}, {"raw": "Towa 1.2 m", "first": "Towa", "power": 1200000, "matched": {"card": "Silent Vow Towa", "tier": "A", "atk": "P", "speed": 175, "type": "Curse", "passive": "Auto MP+2"}}]}, {"name": "Raven", "team": 9360693, "card": 4547381, "element": "grass", "best": [{"raw": "Jiro 3.3 m", "first": "Jiro", "power": 3300000, "matched": {"card": "Reanimated Monster Jiro", "tier": "A", "atk": "P", "speed": 444, "type": "Survivor", "passive": "Poison Revenge"}}, {"raw": "Haru 1.3m", "first": "Haru", "power": 1300000, "matched": {"card": "Wild Keeper Haru", "tier": "A", "atk": "P", "speed": 452, "type": "Charge", "passive": "Auto Charge Up"}}]}, {"name": "Echosong", "team": 9145880, "card": 5440610, "element": "fire", "best": [{"raw": "Jiro 3.5 m", "first": "Jiro", "power": 3500000, "matched": {"card": "Reanimated Monster Jiro", "tier": "A", "atk": "P", "speed": 444, "type": "Survivor", "passive": "Poison Revenge"}}, {"raw": "Taiga 1.1 m^^^", "first": "Taiga ^^^", "power": 1100000, "matched": {"card": "Distorted Heart Taiga", "tier": "A", "atk": "P", "speed": 389, "type": "Guard", "passive": "Sleep Revenge++"}}]}, {"name": "Kittymeowmeow", "team": 9082251, "card": 6067713, "element": "fire", "best": [{"raw": "Towa 5m", "first": "Towa", "power": 5000000, "matched": {"card": "Silent Vow Towa", "tier": "A", "atk": "P", "speed": 175, "type": "Curse", "passive": "Auto MP+2"}}, {"raw": "Leo 956k", "first": "Leo", "power": 956000, "matched": {"card": "Colored Chaos Leo", "tier": "A", "atk": "P", "speed": 503, "type": "Guard", "passive": "Endurance"}}]}, {"name": "Taigas Cali", "team": 8878492, "card": 5189837, "element": "water", "best": [{"raw": "Taiga 4.6 m", "first": "Taiga", "power": 4600000, "matched": {"card": "Distorted Heart Taiga", "tier": "A", "atk": "P", "speed": 389, "type": "Guard", "passive": "Sleep Revenge++"}}, {"raw": "Taiga 779k", "first": "Taiga", "power": 779000, "matched": {"card": "Distorted Heart Taiga", "tier": "A", "atk": "P", "speed": 389, "type": "Guard", "passive": "Sleep Revenge++"}}]}, {"name": ":(", "team": 8943816, "card": 8486290, "element": "grass", "best": [{"raw": "Jin 42k", "first": "Jin", "power": 42000, "matched": {"card": "Frozen Melody Jin", "tier": "A", "atk": "P", "speed": 487, "type": "Charge", "passive": "Endurance"}}]}, {"name": "ZOMB3LLE", "team": 7904196, "card": 2717550, "element": "grass", "best": [{"raw": "Rui 1.6m", "first": "Rui", "power": 1600000, "matched": {"card": "Monochromatic Yearning Rui", "tier": "A", "atk": "P", "speed": 439, "type": "Charge", "passive": "Sleep Entry"}}, {"raw": "Jiro 1.6 m", "first": "Jiro", "power": 1600000, "matched": {"card": "Reanimated Monster Jiro", "tier": "A", "atk": "P", "speed": 444, "type": "Survivor", "passive": "Poison Revenge"}}]}, {"name": "SleepyVessel", "team": 7442071, "card": 5362735, "element": "grass", "best": [{"raw": "Jo 3.4 m", "first": "Jo", "power": 3400000, "matched": {"card": "Phantom Enigma Jo", "tier": "A", "atk": "P", "speed": 435, "type": "Survivor", "passive": "Auto Full DEF Boost"}}, {"raw": "Lyca 781 k", "first": "Lyca", "power": 781000, "matched": {"card": "Gulliver's Table Lyca", "tier": "A", "atk": "P", "speed": 238, "type": "Survivor", "passive": "Slow Entry"}}]}, {"name": "EMMA", "team": 6825265, "card": 4572341, "element": "grass", "best": [{"raw": "Jo 2.9 m", "first": "Jo", "power": 2900000, "matched": {"card": "Phantom Enigma Jo", "tier": "A", "atk": "P", "speed": 435, "type": "Survivor", "passive": "Auto Full DEF Boost"}}]}, {"name": "Destrena 2", "team": 5676000, "card": 4508179, "element": "fire", "best": [{"raw": "yuri 4.1", "first": "yuri", "power": 4099999, "matched": {"card": "Plague Doctor Yuri", "tier": "A", "atk": "P", "speed": 466, "type": "Charge", "passive": "Endurance"}}]}, {"name": "Sapphira Jezebel", "team": 5640874, "card": 1326618, "element": "fire", "best": [{"raw": "Jiro 1.1m", "first": "Jiro", "power": 1100000, "matched": {"card": "Reanimated Monster Jiro", "tier": "A", "atk": "P", "speed": 444, "type": "Survivor", "passive": "Poison Revenge"}}, {"raw": "Subaru 899k", "first": "Subaru", "power": 899000, "matched": {"card": "Swirling Stars Subaru", "tier": "A", "atk": "P", "speed": 388, "type": "Charge", "passive": "Auto MP+2"}}]}, {"name": "Kali", "team": 5596864, "card": 2775178, "element": "fire", "best": [{"raw": "Elias 2.2 m", "first": "Elias", "power": 2200000, "matched": {"card": "Toying Fingertips Elias", "tier": "A", "atk": "P", "speed": 218, "type": "Curse", "passive": "Auto Curse"}}, {"raw": "Mio 771 k", "first": "Mio", "power": 771000, "matched": {"card": "Clockwork Artisan Mio", "tier": "A", "atk": "S", "speed": 335, "type": "Survivor", "passive": "Slow Entry"}}]}, {"name": "nightLotus", "team": 5218610, "card": 2630449, "element": "fire", "best": [{"raw": "Towa 1.6 m", "first": "Towa", "power": 1600000, "matched": {"card": "Silent Vow Towa", "tier": "A", "atk": "P", "speed": 175, "type": "Curse", "passive": "Auto MP+2"}}, {"raw": "SR Edward 953k", "first": "SR Edward", "power": 953000, "matched": null}]}, {"name": "Icarus", "team": 5049285, "card": 1341304, "element": "grass", "best": [{"raw": "Rui 1.3 m", "first": "Rui", "power": 1300000, "matched": {"card": "Monochromatic Yearning Rui", "tier": "A", "atk": "P", "speed": 439, "type": "Charge", "passive": "Sleep Entry"}}, {"raw": "Ren 824k k", "first": "Ren  k", "power": 824000, "matched": null}]}, {"name": "Paigey", "team": 4158191, "card": 1196633, "element": "water", "best": [{"raw": "Zenji 1.1m", "first": "Zenji", "power": 1100000, "matched": {"card": "The Knight of Cups Zenji", "tier": "A", "atk": "P", "speed": 472, "type": "Guard", "passive": "Endurance"}}, {"raw": "Alan 803 k", "first": "Alan", "power": 803000, "matched": {"card": "Nighttime Soak Alan", "tier": "A", "atk": "P", "speed": 286, "type": "Curse", "passive": "Auto Full DEF Boost"}}]}, {"name": "sammicyanide", "team": 4097200, "card": 2114770, "element": "water", "best": [{"raw": "Yuri 618k", "first": "Yuri", "power": 618000, "matched": {"card": "Plague Doctor Yuri", "tier": "A", "atk": "P", "speed": 466, "type": "Charge", "passive": "Endurance"}}]}, {"name": "ThunderNinjaBird", "team": 3882911, "card": 3215024, "element": "water", "best": [{"raw": "Jiro", "first": "Jiro", "power": null, "matched": {"card": "Reanimated Monster Jiro", "tier": "A", "atk": "P", "speed": 444, "type": "Survivor", "passive": "Poison Revenge"}}, {"raw": "Jiro 1.3 m", "first": "Jiro", "power": 1300000, "matched": {"card": "Reanimated Monster Jiro", "tier": "A", "atk": "P", "speed": 444, "type": "Survivor", "passive": "Poison Revenge"}}]}, {"name": "Nitrix", "team": 3633039, "card": 1466925, "element": "fire", "best": [{"raw": "Taiga 494 k", "first": "Taiga", "power": 494000, "matched": {"card": "Distorted Heart Taiga", "tier": "A", "atk": "P", "speed": 389, "type": "Guard", "passive": "Sleep Revenge++"}}]}, {"name": "Ivy", "team": 3202698, "card": 2239039, "element": "fire", "best": [{"raw": "Towa 467 k", "first": "Towa", "power": 467000, "matched": {"card": "Silent Vow Towa", "tier": "A", "atk": "P", "speed": 175, "type": "Curse", "passive": "Auto MP+2"}}]}, {"name": "Chaoskitty", "team": 2899421, "card": 625948, "element": "grass", "best": [{"raw": "Jo 566 k", "first": "Jo", "power": 566000, "matched": {"card": "Phantom Enigma Jo", "tier": "A", "atk": "P", "speed": 435, "type": "Survivor", "passive": "Auto Full DEF Boost"}}, {"raw": "Towa 505 k", "first": "Towa", "power": 505000, "matched": {"card": "Silent Vow Towa", "tier": "A", "atk": "P", "speed": 175, "type": "Curse", "passive": "Auto MP+2"}}]}, {"name": "Melody", "team": 2747699, "card": 1051611, "element": "water", "best": [{"raw": "Jin", "first": "Jin", "power": null, "matched": {"card": "Frozen Melody Jin", "tier": "A", "atk": "P", "speed": 487, "type": "Charge", "passive": "Endurance"}}, {"raw": "Jin 950 k", "first": "Jin", "power": 950000, "matched": {"card": "Frozen Melody Jin", "tier": "A", "atk": "P", "speed": 487, "type": "Charge", "passive": "Endurance"}}]}, {"name": "Katiy", "team": 2559823, "card": 918636, "element": "grass", "best": [{"raw": "Jiro SR", "first": "Jiro SR", "power": null, "matched": null}]}, {"name": "Len", "team": 2472776, "card": 1350844, "element": "water", "best": [{"raw": "Haru 1.2 m", "first": "Haru", "power": 1200000, "matched": {"card": "Wild Keeper Haru", "tier": "A", "atk": "P", "speed": 452, "type": "Charge", "passive": "Auto Charge Up"}}]}, {"name": "CCLovesOreos", "team": 2458697, "card": 963015, "element": "water", "best": [{"raw": "Sho", "first": "Sho", "power": null, "matched": {"card": "Lawless Charmer Shohei", "tier": "A", "atk": "P", "speed": 501, "type": "Survivor", "passive": "Poison Revenge"}}, {"raw": "Shohei 618 k", "first": "Shohei", "power": 618000, "matched": {"card": "Lawless Charmer Shohei", "tier": "A", "atk": "P", "speed": 501, "type": "Survivor", "passive": "Poison Revenge"}}]}, {"name": "Hello", "team": 2398595, "card": 928677, "element": "water", "best": [{"raw": "Jin 906 k", "first": "Jin", "power": 906000, "matched": {"card": "Frozen Melody Jin", "tier": "A", "atk": "P", "speed": 487, "type": "Charge", "passive": "Endurance"}}]}, {"name": "HaruNiiii", "team": 2296766, "card": 1206819, "element": "water", "best": [{"raw": "Haru", "first": "Haru", "power": null, "matched": {"card": "Wild Keeper Haru", "tier": "A", "atk": "P", "speed": 452, "type": "Charge", "passive": "Auto Charge Up"}}, {"raw": "Haru 1.2 m", "first": "Haru", "power": 1200000, "matched": {"card": "Wild Keeper Haru", "tier": "A", "atk": "P", "speed": 452, "type": "Charge", "passive": "Auto Charge Up"}}]}, {"name": "Roka", "team": 2394839, "card": 1758410, "element": "water", "best": [{"raw": "Taiga", "first": "Taiga", "power": null, "matched": {"card": "Distorted Heart Taiga", "tier": "A", "atk": "P", "speed": 389, "type": "Guard", "passive": "Sleep Revenge++"}}, {"raw": "Taiga 1m", "first": "Taiga", "power": 1000000, "matched": {"card": "Distorted Heart Taiga", "tier": "A", "atk": "P", "speed": 389, "type": "Guard", "passive": "Sleep Revenge++"}}]}, {"name": "Basa", "team": 2198568, "card": 772250, "element": "grass", "best": [{"raw": "Sho", "first": "Sho", "power": null, "matched": {"card": "Lawless Charmer Shohei", "tier": "A", "atk": "P", "speed": 501, "type": "Survivor", "passive": "Poison Revenge"}}, {"raw": "Shohei 437k", "first": "Shohei", "power": 437000, "matched": {"card": "Lawless Charmer Shohei", "tier": "A", "atk": "P", "speed": 501, "type": "Survivor", "passive": "Poison Revenge"}}]}, {"name": "Raven 2", "team": 2192228, "card": 627532, "element": "grass", "best": [{"raw": "Ritsu", "first": "Ritsu", "power": null, "matched": {"card": "Operatic Aficionado Ritsu", "tier": "A", "atk": "P", "speed": 402, "type": "Survivor", "passive": "Slow Revenge"}}]}, {"name": "hnacee", "team": 2133668, "card": 681625, "element": "fire", "best": [{"raw": "Jin", "first": "Jin", "power": null, "matched": {"card": "Frozen Melody Jin", "tier": "A", "atk": "P", "speed": 487, "type": "Charge", "passive": "Endurance"}}]}, {"name": "Mori", "team": 2158635, "card": 1849452, "element": "fire", "best": [{"raw": "Sho", "first": "Sho", "power": null, "matched": {"card": "Lawless Charmer Shohei", "tier": "A", "atk": "P", "speed": 501, "type": "Survivor", "passive": "Poison Revenge"}}, {"raw": "Shohei 794 k", "first": "Shohei", "power": 794000, "matched": {"card": "Lawless Charmer Shohei", "tier": "A", "atk": "P", "speed": 501, "type": "Survivor", "passive": "Poison Revenge"}}]}, {"name": "Boo", "team": 2120798, "card": 523288, "element": "grass", "best": [{"raw": "Alan 634k", "first": "Alan", "power": 634000, "matched": {"card": "Nighttime Soak Alan", "tier": "A", "atk": "P", "speed": 286, "type": "Curse", "passive": "Auto Full DEF Boost"}}, {"raw": "Haku 535 k", "first": "Haku", "power": 535000, "matched": {"card": "Riverside Gloaming Haku", "tier": "A", "atk": "P", "speed": 416, "type": "Survivor", "passive": "Endurance"}}]}, {"name": "TowasBubbles", "team": 2013384, "card": 1525224, "element": "water", "best": [{"raw": "Towa 1.4 m", "first": "Towa", "power": 1400000, "matched": {"card": "Silent Vow Towa", "tier": "A", "atk": "P", "speed": 175, "type": "Curse", "passive": "Auto MP+2"}}]}, {"name": "TowaBubbles 2", "team": 1695484, "card": 617302, "element": "fire", "best": [{"raw": "ritsu 613k", "first": "ritsu", "power": 613000, "matched": {"card": "Operatic Aficionado Ritsu", "tier": "A", "atk": "P", "speed": 402, "type": "Survivor", "passive": "Slow Revenge"}}]}, {"name": "Cortana", "team": 1788890, "card": 717694, "element": "fire", "best": []}, {"name": "Sapphira Jezebel 2", "team": 1595328, "card": 326984, "element": "grass", "best": []}, {"name": "ZOMB3LLE 2", "team": 1247108, "card": 256490, "element": "grass", "best": [{"raw": "Ed", "first": "Ed", "power": null, "matched": {"card": "Oneiric Trap Edward", "tier": "A", "atk": "P", "speed": 228, "type": "Charge", "passive": "Auto MP+2"}}]}, {"name": "Aerinnn", "team": 1137257, "card": 349602, "element": "fire", "best": [{"raw": "Elias", "first": "Elias", "power": null, "matched": {"card": "Toying Fingertips Elias", "tier": "A", "atk": "P", "speed": 218, "type": "Curse", "passive": "Auto Curse"}}]}, {"name": "bleumoon", "team": 853384, "card": 226830, "element": "fire", "best": [{"raw": "Jiro", "first": "Jiro", "power": null, "matched": {"card": "Reanimated Monster Jiro", "tier": "A", "atk": "P", "speed": 444, "type": "Survivor", "passive": "Poison Revenge"}}]}, {"name": "Megamind", "team": 639870, "card": 248476, "element": "grass", "best": [{"raw": "Jiro", "first": "Jiro", "power": null, "matched": {"card": "Reanimated Monster Jiro", "tier": "A", "atk": "P", "speed": 444, "type": "Survivor", "passive": "Poison Revenge"}}]}, {"name": "Redd Dawg", "team": 510120, "card": 370841, "element": "fire", "best": [{"raw": "Ed", "first": "Ed", "power": null, "matched": {"card": "Oneiric Trap Edward", "tier": "A", "atk": "P", "speed": 228, "type": "Charge", "passive": "Auto MP+2"}}]}, {"name": "Croissant", "team": 232812, "card": 59927, "element": "fire", "best": [{"raw": "Haku", "first": "Haku", "power": null, "matched": {"card": "Riverside Gloaming Haku", "tier": "A", "atk": "P", "speed": 416, "type": "Survivor", "passive": "Endurance"}}]}, {"name": "Turquoia", "team": 252610, "card": 77193, "element": "fire", "best": []}], "charIndex": {"leo": {"card": "Colored Chaos Leo", "tier": "A", "atk": "P", "speed": 503, "type": "Guard"}, "towa": {"card": "Silent Vow Towa", "tier": "A", "atk": "P", "speed": 175, "type": "Curse"}, "ritsu": {"card": "Operatic Aficionado Ritsu", "tier": "A", "atk": "P", "speed": 402, "type": "Survivor"}, "alan": {"card": "Nighttime Soak Alan", "tier": "A", "atk": "P", "speed": 286, "type": "Curse"}, "lyca": {"card": "Gulliver's Table Lyca", "tier": "A", "atk": "P", "speed": 238, "type": "Survivor"}, "romeo": {"card": "Gambling Sniper Romeo", "tier": "A", "atk": "P", "speed": 443, "type": "Charge"}, "mio": {"card": "Clockwork Artisan Mio", "tier": "A", "atk": "S", "speed": 335, "type": "Survivor"}, "kaito": {"card": "Sunken Memories Kaito", "tier": "A", "atk": "P", "speed": 196, "type": "Charge"}, "subaru": {"card": "Swirling Stars Subaru", "tier": "A", "atk": "P", "speed": 388, "type": "Charge"}, "ren": {"card": "Reluctant Words Ren", "tier": "A", "atk": "P", "speed": 298, "type": "Survivor"}, "jiro": {"card": "Reanimated Monster Jiro", "tier": "A", "atk": "P", "speed": 444, "type": "Survivor"}, "shohei": {"card": "Lawless Charmer Shohei", "tier": "A", "atk": "P", "speed": 501, "type": "Survivor"}, "edward": {"card": "Oneiric Trap Edward", "tier": "A", "atk": "P", "speed": 228, "type": "Charge"}, "rui": {"card": "Monochromatic Yearning Rui", "tier": "A", "atk": "P", "speed": 439, "type": "Charge"}, "jo": {"card": "Phantom Enigma Jo", "tier": "A", "atk": "P", "speed": 435, "type": "Survivor"}, "haku": {"card": "Riverside Gloaming Haku", "tier": "A", "atk": "P", "speed": 416, "type": "Survivor"}, "yuri": {"card": "Plague Doctor Yuri", "tier": "A", "atk": "P", "speed": 466, "type": "Charge"}, "haru": {"card": "Wild Keeper Haru", "tier": "A", "atk": "P", "speed": 452, "type": "Charge"}, "jin": {"card": "Frozen Melody Jin", "tier": "A", "atk": "P", "speed": 487, "type": "Charge"}, "shion": {"card": "The Moon Shion", "tier": "B", "atk": "P", "speed": 384, "type": "Curse"}, "taiga": {"card": "Distorted Heart Taiga", "tier": "A", "atk": "P", "speed": 389, "type": "Guard"}, "elias": {"card": "Toying Fingertips Elias", "tier": "A", "atk": "P", "speed": 218, "type": "Curse"}, "zenji": {"card": "The Knight of Cups Zenji", "tier": "A", "atk": "P", "speed": 472, "type": "Guard"}, "tohma": {"card": "Postmortem Punishment Tohma", "tier": "A", "atk": "S", "speed": 319, "type": "Guard"}, "lucas": {"card": "The Chariot Lucas", "tier": "A", "atk": "S", "speed": 346, "type": "Guard"}}};
+
+/* ============================== MATH ============================== */
+function elementMult(attackerEl, defenderEl) {
+  const a = String(attackerEl || '').toLowerCase();
+  const d = String(defenderEl || '').toLowerCase();
+  const rule = ELEMENT[a];
+  if (!rule) return 1;
+  if (rule.beats === d) return 1.2;
+  if (rule.weak === d) return 0.8;
+  return 1;
+}
+function ceil05(v) { return Math.round(Math.ceil(Math.max(0, v) / 0.05) * 0.05 * 100) / 100; }
+function compute(attacker, defender) {
+  const mult = elementMult(attacker.element, defender.element);
+  const ratio = (atk, def) => {
+    if (!atk || !def) return null; // missing power — can't compute
+    return ceil05(1 - (atk * mult) / def);
+  };
+  const teamRatio = ratio(attacker.team, defender.team);
+  const cardRatio = ratio(attacker.card, defender.card);
+  const toKos = r => r === null ? null : Math.round((r / 0.05) * 24);
+  const teamKos = toKos(teamRatio), cardKos = toKos(cardRatio);
+  return {
+    mult,
+    team: { ratio: teamRatio, kos: teamKos, fodder: teamKos === null ? null : Math.round(teamKos / 6) },
+    card: { ratio: cardRatio, kos: cardKos, fodder: cardKos === null ? null : Math.round(cardKos / 6) }
+  };
+}
+// True Speed: TU = floor((1000 - Speed) / 10)
+function tuOfSpeed(speed) {
+  if (speed === null || speed === undefined || isNaN(speed)) return null;
+  return Math.max(1, Math.floor((1000 - speed) / 10));
+}
+
+/* ============================== UI ============================== */
+const $ = id => document.getElementById(id);
+const defRoster = $('defRoster'), attRoster = $('attRoster');
+const defSearch = $('defSearch'), attSearch = $('attSearch');
+let defSel = null, attSel = null;
+let defFilter = '', attFilter = '';
+
+const ELEM_CLASS = { fire: 'el-fire', water: 'el-water', grass: 'el-grass' };
+function elChip(el) {
+  const k = String(el || '').toLowerCase();
+  return '<span class="el-chip ' + (ELEM_CLASS[k] || 'el-unknown') + '">● ' + (k || '—') + '</span>';
+}
+function fmt(n) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  return Math.round(n).toLocaleString('en-US');
+}
+function fmtShort(n) {
+  if (n === null || n === undefined || isNaN(n)) return '';
+  if (n >= 1e6) return (n / 1e6).toFixed(n % 1e6 === 0 ? 0 : 1) + 'm';
+  if (n >= 1e3) return Math.round(n / 1e3) + 'k';
+  return String(n);
+}
+function rtTier(t) {
+  if (!t) return '';
+  const k = String(t).toUpperCase();
+  const cls = 'tier' + k;
+  return '<span class="rt ' + cls + '">' + k + '</span>';
+}
+function rtAtk(a) {
+  if (!a) return '';
+  const k = String(a).toUpperCase();
+  return '<span class="rt atk' + k + '">' + k + '</span>';
+}
+function rtTu(sp) {
+  const tu = tuOfSpeed(sp);
+  if (tu === null) return '';
+  return '<span class="rt tu" title="True Speed / TU — ⌊(1000−' + sp + ')÷10⌋">TU ' + tu + '</span>';
+}
+
+function renderCharCards(container, member) {
+  const best = member.best || [];
+  if (!best.length) {
+    container.innerHTML = '<div class="lbl">Identified cards</div>' +
+      '<div class="char-card"><span class="nomatch">No best cards listed in the sheet</span></div>';
+    return;
+  }
+  const html = best.map(b => {
+    const m = b.matched;
+    if (!m) {
+      return '<div class="char-card"><div class="who"><b>' + b.first + '</b>' +
+        '<span>' + b.raw + ' — no match</span></div>' +
+        (b.power ? '<span class="pw">' + fmtShort(b.power) + '</span>' : '') + '</div>';
+    }
+    return '<div class="char-card">' +
+      '<div class="who"><b>' + m.card + '</b>' +
+      '<span>' + b.raw + (b.power ? ' · ' + fmtShort(b.power) + ' power' : '') + '</span></div>' +
+      '<div class="rating">' + rtTier(m.tier) + rtAtk(m.atk) + rtTu(m.speed) + '</div>' +
+      '</div>';
+  }).join('');
+  container.innerHTML = '<div class="lbl">Identified cards</div>' + html;
+}
+
+function renderRoster(el, members, filter, selected, side) {
+  const q = filter.trim().toLowerCase();
+  const list = members.filter(m => !q || m.name.toLowerCase().includes(q));
+  if (!list.length) { el.innerHTML = '<li class="empty">No members match “' + filter + '”</li>'; return; }
+  el.innerHTML = list.map(m =>
+    '<li data-side="' + side + '" data-name="' + m.name.replace(/"/g, '&quot;') + '" class="' + (selected && selected.name === m.name ? 'active' : '') + '">' +
+      '<span class="nm">' + m.name + '</span>' +
+      elChip(m.element) +
+      '<span class="pw">team <b>' + fmt(m.team) + '</b> · card <b>' + fmt(m.card) + '</b></span>' +
+    '</li>').join('');
+}
+
+function renderSummary(el, m, labelTeam, labelCard) {
+  if (!m) { el.innerHTML = ''; return; }
+  el.innerHTML =
+    '<div class="stat"><div class="lbl">' + labelTeam + '</div><div class="val">' + fmt(m.team) + '</div></div>' +
+    '<div class="stat"><div class="lbl">' + labelCard + '</div><div class="val">' + fmt(m.card) + '</div></div>';
+  const cards = document.createElement('div');
+  cards.className = 'char-cards';
+  el.appendChild(cards);
+  renderCharCards(cards, m);
+}
+
+function renderElemRow() {
+  if (!defSel || !attSel) { $('elemRow').innerHTML = ''; return; }
+  const mult = elementMult(attSel.element, defSel.element);
+  const kind = mult > 1 ? 'adv' : mult < 1 ? 'dis' : 'neu';
+  const label = mult > 1 ? 'Advantage' : mult < 1 ? 'Disadvantage' : 'Neutral';
+  const verdict = mult > 1 ? 'Your attack power gets a ×1.2 boost — need less debuff.'
+               : mult < 1 ? 'Your attack power is reduced to ×0.8 — need more debuff.'
+               : 'Same element — no modifier.';
+  $('elemRow').innerHTML =
+    '<div class="elem-pair">' + elChip(defSel.element) + '<span class="arrow">vs</span>' + elChip(attSel.element) + '</div>' +
+    '<span class="mult ' + kind + '">×' + mult.toFixed(1) + '</span>' +
+    '<span class="elem-verdict">' + label + ' — ' + verdict + '</span>';
+}
+
+function renderResultCard(bodyId, cardId, res, which) {
+  const body = $(bodyId), card = $(cardId);
+  if (res.ratio === null) {
+    card.classList.remove('win', 'debuff');
+    body.innerHTML = '<div class="big"><span class="pct">—</span><span class="unit">% debuff</span></div>' +
+      '<div class="result-tiles">' +
+        '<div class="tile kos"><div class="lbl">KOs needed</div><div class="num">—</div><div class="sub">KOs to defeat the Darkmoon defender</div></div>' +
+        '<div class="tile fodder"><div class="lbl">Fodder needed</div><div class="num">—</div><div class="sub">fodder attacks</div></div>' +
+      '</div>' +
+      '<div class="verdict no show">⚠️ Missing power data for one side — pick members with team &amp; card power to calculate.</div>';
+    return;
+  }
+  const need = res.ratio > 0;
+  card.classList.toggle('win', !need);
+  card.classList.toggle('debuff', need);
+  body.innerHTML =
+    '<div class="big"><span class="pct">' + (res.ratio * 100).toFixed(0) + '</span><span class="unit">% debuff</span></div>' +
+    '<div class="result-tiles">' +
+      '<div class="tile kos"><div class="lbl">KOs needed</div><div class="num">' + res.kos + '</div><div class="sub">KOs to defeat the Darkmoon defender</div></div>' +
+      '<div class="tile fodder"><div class="lbl">Fodder needed</div><div class="num">' + res.fodder + '</div><div class="sub">fodder attacks</div></div>' +
+    '</div>' +
+    '<div class="verdict ' + (need ? 'no show' : 'yes show') + '">' +
+      (need ? '⚠️ You need a ' + (res.ratio * 100).toFixed(0) + '% debuff on the defender to win this ' + which + ' matchup.'
+            : '✅ No debuff needed — your ' + which + ' power already wins.') +
+    '</div>';
+}
+
+function renderRefTable() {
+  const rows = [];
+  for (let i = 1; i <= 20; i++) {
+    const r = Math.round(i * 0.05 * 100) / 100;
+    const kos = i * 24, fodder = kos / 6;
+    rows.push('<div class="ref-cell"><span class="r">' + (r * 100).toFixed(0) + '%</span><span class="k"><b>' + kos + '</b> KOs</span><span class="f"><b>' + fodder + '</b> fodder</span></div>');
+  }
+  $('refGrid').innerHTML = rows.join('');
+}
+
+function renderAll() {
+  if (!defSel && ROSTER.defenders.length) defSel = ROSTER.defenders[0];
+  if (!attSel && ROSTER.attackers.length) attSel = ROSTER.attackers[0];
+  if (!defSel || !attSel) return;
+  renderRoster(defRoster, ROSTER.defenders, defFilter, defSel, 'def');
+  renderRoster(attRoster, ROSTER.attackers, attFilter, attSel, 'att');
+  renderSummary($('defSummary'), defSel, 'Team power', 'Main card power');
+  renderSummary($('attSummary'), attSel, 'Team power', 'Main card power');
+  renderElemRow();
+  const res = compute(attSel, defSel);
+  renderResultCard('teamBody', 'teamCard', res.team, 'team-power');
+  renderResultCard('cardBody', 'cardCard', res.card, 'card-power');
+  renderRefTable();
+}
+
+defSearch.addEventListener('input', e => { defFilter = e.target.value; renderAll(); });
+attSearch.addEventListener('input', e => { attFilter = e.target.value; renderAll(); });
+
+document.addEventListener('click', e => {
+  const li = e.target.closest('li[data-side]');
+  if (!li) return;
+  const name = li.dataset.name;
+  if (li.dataset.side === 'def') {
+    defSel = ROSTER.defenders.find(m => m.name === name) || defSel;
+    defSearch.value = ''; defFilter = '';
+  } else {
+    attSel = ROSTER.attackers.find(m => m.name === name) || attSel;
+    attSearch.value = ''; attFilter = '';
+  }
+  renderAll();
+});
+
+$('shareBtn').addEventListener('click', async () => {
+  const url = location.href;
+  if (/^file:|^about:/.test(url)) {
+    return;
+  }
+  try {
+    if (navigator.share) { await navigator.share({ title: 'GOC Darkmoon Calculator', text: 'GOC Darkmoon Calculator — debuff %, KOs & identified characters for Frostheim VS Darkmoon:', url }); return; }
+    await navigator.clipboard.writeText(url);
+  } catch (e) {}
+});
+$('resetBtn').addEventListener('click', () => {
+  if (!confirm('Reset to the built-in roster? Imported data will be removed.')) return;
+  try { localStorage.removeItem(LS_KEY); } catch (e) {}
+  ROSTER.defenders = BUILTIN.defenders;
+  ROSTER.attackers = BUILTIN.attackers;
+  ROSTER.updated = BUILTIN.updated;
+  defSel = attSel = null; defFilter = attFilter = '';
+  defSearch.value = ''; attSearch.value = '';
+  renderAll();
+  setImp('Reset to built-in roster.', 'ok');
+});
+
+/* ============================== IMPORT FROM EXCEL ============================== */
+// Persist imported rosters so the page works offline after one import.
+const LS_KEY = 'goc-darkmoon-data-v1';
+const BUILTIN = {
+  defenders: ROSTER.defenders,
+  attackers: ROSTER.attackers,
+  updated: ROSTER.updated
+};
+function loadStored() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (d && Array.isArray(d.defenders) && d.defenders.length && Array.isArray(d.attackers) && d.attackers.length) {
+      ROSTER.defenders = d.defenders;
+      ROSTER.attackers = d.attackers;
+      ROSTER.updated = d.updated || ROSTER.updated;
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+const imported = loadStored();
+
+const CDNS = [
+  'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+  'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'
+];
+function loadScript(src){ return new Promise((res, rej) => {
+  const s = document.createElement('script'); s.src = src;
+  s.onload = () => res(); s.onerror = () => rej(new Error(src)); document.head.appendChild(s);
+});}
+// NOTE: do NOT declare a local `XLSX` — SheetJS declares its own global `var XLSX`,
+// and a lexical `let XLSX` here would make the CDN script throw on parse.
+let xlsxLib = null;
+(async () => {
+  for (const c of CDNS) { try { await loadScript(c); if (window.XLSX) { xlsxLib = window.XLSX; break; } } catch (e) {} }
+  if (!xlsxLib) setImp('Excel import unavailable (network blocked) — built-in roster still works.', 'err');
+})();
+
+const imp = $('importStatus');
+function setImp(msg, kind) { imp.textContent = msg; imp.className = kind || ''; }
+
+// Alias map matching data/build_darkmoon_data.py — short/misspelled sheet names -> Full Data first name.
+const ALIAS = {
+  thoma: 'tohma', sho: 'shohei', shhohei: 'shohei', ed: 'edward',
+  edward: 'edward', jo: 'jo', zenji: 'zenji', taiga: 'taiga'
+};
+const POWER_RE = /([\d.,]+)\s*([km]?)/i;
+function matchBest(raw) {
+  // returns [{ raw, first, power, matched }] — same shape as the built-in data
+  const out = [];
+  for (const p of String(raw || '').split(/[,\n/]+/)) {
+    const part = p.trim();
+    if (!part || /^[x\-–—]*$/i.test(part)) continue;
+    const m = part.match(POWER_RE);
+    let namePart = part.replace(POWER_RE, '').trim().replace(/[-–—]+$/, '').trim();
+    let power = null;
+    if (m) {
+      const num = parseFloat(m[1].replace(/,/g, ''));
+      const suf = (m[2] || '').toLowerCase();
+      power = suf === 'm' ? num * 1e6 : suf === 'k' ? num * 1e3 : (num < 1000 ? num * 1e6 : num);
+    }
+    const token = (ALIAS[namePart.toLowerCase()] || namePart.toLowerCase()).replace(/[^a-z]/g, '');
+    const idx = ROSTER.charIndex && ROSTER.charIndex[token];
+    out.push({
+      raw: part, first: namePart, power: power === null ? null : Math.round(power),
+      matched: idx ? { card: idx.card, tier: idx.tier, atk: idx.atk, speed: idx.speed, type: idx.type, passive: '' } : null
+    });
+  }
+  return out;
+}
+
+function num(v) {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  return isNaN(n) ? null : n;
+}
+function cleanEl(v) {
+  const e = String(v || '').trim().toLowerCase();
+  return ['fire', 'water', 'grass'].includes(e) ? e : '';
+}
+
+function parseWorkbook(wb) {
+  const defs = [], atts = [];
+  for (const name of wb.SheetNames) {
+    const ws = wb.Sheets[name];
+    const n = String(name).toLowerCase();
+    // Darkmoon sheet: A=name B=team C=card power D=element, best cards in H/I/J
+    if (n.includes('darkmoon') && !n.includes('station')) {
+      for (let r = 5; r <= 80; r++) {
+        const nm = ws['A' + r] && ws['A' + r].v;
+        if (!nm || String(nm).trim() === 'Name') continue;
+        const team = num(ws['B' + r] && ws['B' + r].v);
+        const card = num(ws['C' + r] && ws['C' + r].v);
+        const el = cleanEl(ws['D' + r] && ws['D' + r].v);
+        const best = matchBest((ws['H' + r] && ws['H' + r].v) || '') +
+                     matchBest((ws['I' + r] && ws['I' + r].v) || '') +
+                     matchBest((ws['J' + r] && ws['J' + r].v) || '');
+        if (!nm || (!team && !card && !best.length)) continue;
+        defs.push({ name: String(nm).trim(), team, card, element: el, best, skills: (ws['K' + r] && ws['K' + r].v) || '' });
+      }
+    }
+    // Frostheim sheet: A=name B=team C=card power D=element, best cards in E/F/G.
+    // Cap at row 50 — rows 54+ hold the "GOC ACTIVE" matchup table, not the roster.
+    if (n.includes('frostheim')) {
+      for (let r = 3; r <= 50; r++) {
+        const nm = ws['A' + r] && ws['A' + r].v;
+        if (!nm || String(nm).trim() === 'Who' || String(nm).toLowerCase().includes('frostheim')) continue;
+        const team = num(ws['B' + r] && ws['B' + r].v);
+        const card = num(ws['C' + r] && ws['C' + r].v);
+        const el = cleanEl(ws['D' + r] && ws['D' + r].v);
+        const best = matchBest((ws['E' + r] && ws['E' + r].v) || '') +
+                     matchBest((ws['F' + r] && ws['F' + r].v) || '') +
+                     matchBest((ws['G' + r] && ws['G' + r].v) || '');
+        if (!team && !card && !best.length) continue;
+        atts.push({ name: String(nm).trim(), team, card, element: el, best });
+      }
+    }
+  }
+  return { defenders: defs, attackers: atts };
+}
+
+function handleFile(file) {
+  if (!xlsxLib) { setImp('Spreadsheet engine not ready yet — try again in a second.', 'err'); return; }
+  setImp('Reading “' + file.name + '”…');
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const wb = xlsxLib.read(new Uint8Array(e.target.result), { type: 'array', cellFormula: false });
+      const parsed = parseWorkbook(wb);
+      if (!parsed.defenders.length && !parsed.attackers.length) {
+        setImp('No Darkmoon / Frostheim sheets found in that workbook.', 'err');
+        return;
+      }
+      ROSTER.defenders = parsed.defenders.length ? parsed.defenders : ROSTER.defenders;
+      ROSTER.attackers = parsed.attackers.length ? parsed.attackers : ROSTER.attackers;
+      try { localStorage.setItem(LS_KEY, JSON.stringify({ defenders: ROSTER.defenders, attackers: ROSTER.attackers, updated: 'imported' })); } catch (err) {}
+      defSel = attSel = null; defFilter = attFilter = '';
+      defSearch.value = ''; attSearch.value = '';
+      renderAll();
+      setImp('Imported ' + ROSTER.defenders.length + ' defenders + ' + ROSTER.attackers.length + ' attackers — saved locally.', 'ok');
+    } catch (err) {
+      setImp('Import failed: ' + (err && err.message ? err.message : err), 'err');
+    }
+  };
+  reader.onerror = () => setImp('Could not read the file.', 'err');
+  reader.readAsArrayBuffer(file);
+}
+
+const drop = $('drop');
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('over'); if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
+drop.addEventListener('click', () => $('fileInput').click());
+$('fileInput').addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); });
+$('importBtn').addEventListener('click', () => $('fileInput').click());
+
+/* Boot */
+function updateMeta() {
+  const t = ROSTER.defenders.length + ROSTER.attackers.length;
+  $('rosterCount').innerHTML = '<b>' + ROSTER.defenders.length + '</b> defenders · <b>' + ROSTER.attackers.length + '</b> attackers loaded';
+  $('dataWho').innerHTML = imported
+    ? 'Custom data loaded from your workbook'
+    : 'Built-in roster (updated 7/11 · 8/1)';
+}
+renderAll();
+updateMeta();
+</script>
+</body>
+</html>
