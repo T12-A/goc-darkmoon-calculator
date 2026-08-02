@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GOC KO Calculator — enter the power you need to beat</title>
-<meta name="description" content="GOC battle-station KO calculator — type in your power and the power you need to beat, pick elements and the defender's special skills, and get the exact debuff %, KOs and fodder. Same math as the Darkmoon VS calculator.">
+<title>GOC KO Calculator — battle-station debuff sheet</title>
+<meta name="description" content="GOC battle-station KO calculator — type in the opponent's total team power and read the full KO sheet: every 6-KO team adds 1.25% debuff, with the total power needed to defeat them. Same math as the Darkmoon VS calculator and your spreadsheet.">
 <meta name="theme-color" content="#140d20">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="GOC KO Calculator">
-<meta property="og:title" content="GOC KO Calculator — enter the power you need to beat">
-<meta property="og:description" content="Live KOs &amp; debuff calculator — type in powers, pick elements and special skills, get debuff %, KOs and fodder instantly.">
+<meta property="og:title" content="GOC KO Calculator — battle-station debuff sheet">
+<meta property="og:description" content="Type in the opponent's total power and read every KO range → debuff % → power needed to defeat, live.">
 <meta name="twitter:card" content="summary">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23140d20'/%3E%3Ctext x='32' y='43' font-size='30' text-anchor='middle'%3E%F0%9F%97%A1%EF%B8%8F%3C/text%3E%3C/svg%3E">
 <style>
@@ -32,7 +32,7 @@
   .badge { display: inline-block; vertical-align: middle; margin-left: 10px; background: rgba(188,126,255,.12);
     border: 1px solid rgba(188,126,255,.4); color: #bc7eff; border-radius: 999px; padding: 2px 12px; font-size: 11.5px;
     font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
-  p.sub { color: #8b949e; margin: 0; font-size: 14px; max-width: 680px; line-height: 1.55; }
+  p.sub { color: #8b949e; margin: 0; font-size: 14px; max-width: 720px; line-height: 1.55; }
   .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
   select, button, input[type=search], input[type=text], input[type=number] { font: inherit; color: #e6edf3; }
@@ -56,107 +56,45 @@
   .card { background: rgba(22,27,34,.88); border: 1px solid #21262d; border-radius: 16px; }
   .card-title { font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: #8b949e; margin: 0 0 14px; }
 
-  .matchup { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; margin-top: 26px; align-items: stretch; }
-  .member-card { padding: 20px; position: relative; overflow: hidden; }
-  .member-card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; opacity: .9; }
-  .member-card.defending::before { background: linear-gradient(90deg, #bc7eff, #d29922); }
-  .member-card.attacking::before { background: linear-gradient(90deg, #3fb950, #58a6ff); }
-  .member-card .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 8px; flex-wrap: wrap; }
-  .member-card h2 { font-size: 15px; margin: 0; color: #e6edf3; }
-  .member-card h2 small { color: #8b949e; font-weight: 500; font-size: 12px; }
-
-  .power-field { margin-top: 12px; }
-  .power-field:first-of-type { margin-top: 0; }
+  .inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 26px; }
+  .input-card { padding: 20px; }
   .power-field label { display: block; font-size: 10.5px; color: #8b949e; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
   .power-field label b { color: #c9d1d9; font-weight: 700; }
   .power-field input { width: 100%; font-family: ui-monospace, Consolas, monospace; font-size: 14px; }
-  .power-field .hint { font-size: 11px; color: #6e7681; margin-top: 4px; }
-  .elem-field { margin-top: 14px; display: flex; align-items: center; gap: 10px; }
-  .elem-field label { font-size: 10.5px; color: #8b949e; text-transform: uppercase; letter-spacing: .06em; }
-  .elem-field select { min-width: 150px; }
+  .power-field .hint { font-size: 11px; color: #6e7681; margin-top: 4px; line-height: 1.5; }
 
-  .el-chip { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 2px 10px; font-size: 11px; font-weight: 700; text-transform: capitalize; letter-spacing: .03em; }
-  .el-fire { background: rgba(255,107,74,.14); color: #ff9b85; border: 1px solid rgba(255,107,74,.4); }
-  .el-water { background: rgba(74,168,255,.14); color: #7cc2ff; border: 1px solid rgba(74,168,255,.4); }
-  .el-grass { background: rgba(74,208,122,.14); color: #7fe0a4; border: 1px solid rgba(74,208,122,.4); }
-  .el-unknown { background: rgba(139,148,158,.14); color: #8b949e; border: 1px solid rgba(139,148,158,.4); }
+  .readout { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: #161b22; border: 1px solid #21262d; font-size: 12.5px; color: #8b949e; line-height: 1.7; }
+  .readout b { color: #e6edf3; }
+  .readout .gold { color: #d29922; font-weight: 700; font-family: ui-monospace, Consolas, monospace; }
+  .readout .green { color: #3fb950; font-weight: 700; font-family: ui-monospace, Consolas, monospace; }
 
-  .vs { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 0 2px; }
-  .vs .ring { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    background: #161b22; border: 1px solid #30363d; font-size: 13px; font-weight: 800; color: #8b949e; }
+  .ko-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+  .ksum { background: #161b22; border: 1px solid #21262d; border-radius: 12px; padding: 14px; text-align: center; }
+  .ksum .lbl { font-size: 10.5px; color: #8b949e; text-transform: uppercase; letter-spacing: .07em; }
+  .ksum .num { font-size: 26px; font-weight: 800; margin-top: 4px; font-family: ui-monospace, Consolas, monospace; color: #e6edf3; }
+  .ksum .num.gold { color: #ffd479; }
+  .ksum .num.green { color: #3fb950; }
+  .ksum .num.blue { color: #58a6ff; }
+  .ksum .sub { font-size: 11px; color: #6e7681; margin-top: 2px; }
 
-  .elem-row { display: flex; align-items: center; gap: 14px; margin-top: 16px; padding: 14px 20px; flex-wrap: wrap; }
-  .elem-pair { display: flex; align-items: center; gap: 8px; }
-  .elem-pair .arrow { color: #8b949e; font-size: 15px; }
-  .mult { font-size: 13.5px; font-weight: 700; font-family: ui-monospace, Consolas, monospace; padding: 4px 12px; border-radius: 8px; }
-  .mult.adv { color: #3fb950; background: rgba(63,185,80,.12); border: 1px solid rgba(63,185,80,.4); }
-  .mult.neu { color: #8b949e; background: rgba(139,148,158,.1); border: 1px solid rgba(139,148,158,.3); }
-  .mult.dis { color: #f85149; background: rgba(248,81,73,.12); border: 1px solid rgba(248,81,73,.4); }
-  .elem-verdict { font-size: 13px; color: #8b949e; }
-
-  .adj-panel { margin-top: 16px; padding: 20px; }
-  .adj-panel .flag-toggles { display: flex; gap: 8px; flex-wrap: wrap; }
-  .adj-panel .flag-toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none;
-    font-size: 11.5px; font-weight: 700; border-radius: 999px; padding: 6px 13px; border: 1px solid #30363d;
-    background: #161b22; color: #8b949e; transition: all .15s ease; }
-  .adj-panel .flag-toggle:hover { border-color: #58a6ff; color: #c9d1d9; }
-  .adj-panel .flag-toggle.on { color: #fff; }
-  .adj-panel .flag-toggle.lifeflip.on { background: rgba(255,107,74,.22); border-color: #ff6b4a; }
-  .adj-panel .flag-toggle.stun.on { background: rgba(210,153,34,.22); border-color: #d29922; }
-  .adj-panel .flag-toggle.sleep.on { background: rgba(74,168,255,.22); border-color: #4aa8ff; }
-  .adj-panel .flag-toggle.x6.on { background: rgba(248,81,73,.24); border-color: #f85149; }
-  .adj-panel .flag-toggle input { display: none; }
-  .tier-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; padding-top: 14px; border-top: 1px dashed #21262d; }
-  .tier-row label { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: .06em; }
-  .tier-row select { min-width: 190px; }
-  .tier-row .note { font-size: 11.5px; color: #6e7681; }
-
-  .results { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
-  .result-card { padding: 22px 22px 20px; position: relative; overflow: hidden; }
-  .result-card .big { display: flex; align-items: baseline; gap: 6px; margin: 4px 0 14px; }
-  .result-card .big .pct { font-size: 46px; font-weight: 800; letter-spacing: -0.02em; line-height: 1; font-family: ui-monospace, Consolas, monospace; }
-  .result-card .big .unit { font-size: 18px; color: #8b949e; font-weight: 600; }
-  .result-card.win .pct { color: #3fb950; }
-  .result-card.debuff .pct { color: #d29922; }
-  .result-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .tile { background: #161b22; border: 1px solid #21262d; border-radius: 12px; padding: 14px; text-align: center; transition: transform .15s, border-color .15s; }
-  .tile:hover { transform: translateY(-2px); border-color: #30363d; }
-  .tile .lbl { font-size: 10.5px; color: #8b949e; text-transform: uppercase; letter-spacing: .07em; }
-  .tile .num { font-size: 28px; font-weight: 800; margin-top: 4px; font-family: ui-monospace, Consolas, monospace; color: #e6edf3; }
-  .tile .sub { font-size: 11px; color: #6e7681; margin-top: 2px; }
-  .tile.pure .num { color: #8b949e; }
-  .tile.pure .lbl { color: #6e7681; }
-  .tile.chara .num { color: #ffd479; }
-  .tile.chara .sub { color: #8b949e; }
-  .tile.chara.adjusted { border-color: rgba(210,153,34,.55); background: linear-gradient(180deg, rgba(210,153,34,.10), #161b22); box-shadow: 0 0 0 1px rgba(210,153,34,.25); }
-  .tile.chara.adjusted .sub { color: #d29922; }
-  .adj-note { margin-top: 10px; padding: 8px 12px; border-radius: 9px; background: rgba(210,153,34,.08); border: 1px solid rgba(210,153,34,.3); font-size: 12px; color: #d29922; line-height: 1.6; }
-  .adj-note b { color: #ffd479; }
-  .verdict { margin-top: 14px; padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; display: none; }
-  .verdict.show { display: block; }
-  .verdict.yes { background: rgba(63,185,80,.1); border: 1px solid rgba(63,185,80,.35); color: #3fb950; }
-  .verdict.no { background: rgba(210,153,34,.1); border: 1px solid rgba(210,153,34,.35); color: #d29922; }
-
-  .reverse-card { margin-top: 16px; padding: 20px; }
-  .reverse-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
-  .reverse-controls { display: flex; flex-direction: column; gap: 12px; }
-  .reverse-controls .power-field input { width: 100%; }
-  .reverse-controls .debuff-slider input[type=range] { width: 100%; accent-color: #bc7eff; }
-  .reverse-controls .debuff-slider .cur { font-family: ui-monospace, Consolas, monospace; font-weight: 700; color: #d29922; }
-  .reverse-out { display: grid; grid-template-columns: 1fr; gap: 10px; }
-  .reverse-out .tile .lbl { font-size: 10px; }
-  .reverse-out .tile .num { font-size: 24px; }
-  .reverse-out .tile .sub { line-height: 1.5; }
-
-  details.ref { margin-top: 16px; }
-  details.ref summary { cursor: pointer; padding: 14px 20px; font-size: 14px; font-weight: 600; color: #c9d1d9; list-style: none; }
-  details.ref summary::-webkit-details-marker { display: none; }
-  details.ref summary::after { content: "▾"; float: right; color: #8b949e; transition: transform .2s; }
-  details.ref[open] summary::after { transform: rotate(180deg); }
-  .ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; padding: 0 20px 20px; }
-  .ref-cell { background: #161b22; border: 1px solid #21262d; border-radius: 9px; padding: 8px 10px; font-size: 12px; text-align: center; }
-  .ref-cell b { display: block; font-size: 13.5px; font-family: ui-monospace, Consolas, monospace; }
-  .ref-cell .r { color: #d29922; } .ref-cell .k { color: #c9d1d9; } .ref-cell .f { color: #58a6ff; }
+  /* The KO sheet — always visible, exactly like the spreadsheet's table */
+  .sheet-card { margin-top: 18px; padding: 20px; }
+  .sheet-scroll { max-height: 62vh; overflow: auto; border: 1px solid #21262d; border-radius: 11px; background: #0d1117; }
+  table.ko-sheet { width: 100%; border-collapse: collapse; font-size: 12.5px; font-family: ui-monospace, Consolas, monospace; }
+  table.ko-sheet th {
+    position: sticky; top: 0; z-index: 2; background: #161b22; color: #8b949e; text-transform: uppercase;
+    letter-spacing: .05em; font-size: 10px; padding: 10px 12px; text-align: right; border-bottom: 1px solid #30363d;
+  }
+  table.ko-sheet th:first-child { text-align: left; }
+  table.ko-sheet td { padding: 7px 12px; text-align: right; border-bottom: 1px solid #161b22; color: #c9d1d9; white-space: nowrap; }
+  table.ko-sheet td:first-child { text-align: left; color: #8b949e; }
+  table.ko-sheet tr:hover td { background: rgba(188,126,255,.05); }
+  table.ko-sheet td.pct { color: #d29922; font-weight: 700; }
+  table.ko-sheet td.need { color: #3fb950; font-weight: 700; }
+  table.ko-sheet tr.cur td { background: rgba(210,153,34,.14); box-shadow: inset 3px 0 0 #d29922; }
+  table.ko-sheet tr.cur td:first-child { color: #ffd479; font-weight: 800; }
+  .sheet-note { margin-top: 10px; font-size: 11.5px; color: #6e7681; line-height: 1.6; }
+  .sheet-note b { color: #8b949e; }
 
   details.legend { margin-top: 16px; }
   details.legend summary { cursor: pointer; padding: 14px 20px; font-size: 14px; font-weight: 600; color: #c9d1d9; list-style: none; }
@@ -173,10 +111,8 @@
   footer a:hover { text-decoration: underline; }
 
   @media (max-width: 860px) {
-    .matchup { grid-template-columns: 1fr; }
-    .vs { flex-direction: row; }
-    .results { grid-template-columns: 1fr; }
-    .reverse-grid { grid-template-columns: 1fr; }
+    .inputs { grid-template-columns: 1fr; }
+    .ko-summary { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -186,188 +122,82 @@
 
   <header>
     <div>
-      <h1>GOC <span class="accent">KO Calculator</span><span class="badge">Power in · KOs out</span></h1>
-      <p class="sub">Type in <b>your power</b> and the <b>power you need to beat</b> — pick elements and the defender's special skills, and get the exact debuff %, KOs and fodder you need. Identical math to the Darkmoon VS calculator (each 6-KO team = 1.25% debuff).</p>
+      <h1>GOC <span class="accent">KO Calculator</span><span class="badge">Debuff sheet</span></h1>
+      <p class="sub">Type in the <b>opponent's total team power</b> — the KO sheet below updates live with every KO range, its debuff %, and the <b>total power needed to defeat</b> them. Each <b>6-KO team</b> adds <b>1.25% debuff</b>, exactly like your spreadsheet.</p>
     </div>
     <div class="toolbar">
       <button id="shareBtn" class="share" title="Copy the live link to share with guildmates">🔗 Share</button>
-      <button id="fillBtn" class="ghost" title="Fill in an example matchup">✨ Example</button>
+      <button id="fillBtn" class="ghost" title="Fill in an example opponent">✨ Example</button>
     </div>
   </header>
 
-  <section class="matchup">
-    <div class="card member-card attacking">
-      <div class="head">
-        <h2>⚔️ Your Power <small>· the attacker</small></h2>
-      </div>
+  <section class="inputs">
+    <div class="card input-card">
       <div class="power-field">
-        <label>Team power <b>· needs debuff</b></label>
-        <input id="attTeam" type="text" inputmode="decimal" placeholder="e.g. 21,217,000 or 21.2m" autocomplete="off">
-        <div class="hint">Your full attacking team's total power</div>
-      </div>
-      <div class="power-field">
-        <label>Main card power <b>· needs debuff</b></label>
-        <input id="attCard" type="text" inputmode="decimal" placeholder="e.g. 10,200,000 or 10.2m" autocomplete="off">
-        <div class="hint">Your strongest card's power</div>
-      </div>
-      <div class="elem-field">
-        <label>Your element</label>
-        <select id="attEl">
-          <option value="fire">🔥 Fire</option>
-          <option value="water" selected>💧 Water</option>
-          <option value="grass">🌿 Grass</option>
-          <option value="unknown">❔ Unknown</option>
-        </select>
+        <label>⚔️ Opponent's total team power</label>
+        <input id="oppPower" type="text" inputmode="decimal" placeholder="e.g. 31,397,544 or 31.4m" autocomplete="off">
+        <div class="hint">The defending team's total power — the number you must out-damage after debuffs. Accepts <code>21,217,000</code>, <code>21.2m</code> or <code>500k</code>.</div>
       </div>
     </div>
 
-    <div class="vs"><div class="ring">VS</div></div>
-
-    <div class="card member-card defending">
-      <div class="head">
-        <h2>🛡 Power You Need to Beat <small>· the defender</small></h2>
-      </div>
+    <div class="card input-card">
       <div class="power-field">
-        <label>Team power</label>
-        <input id="defTeam" type="text" inputmode="decimal" placeholder="e.g. 31,397,544 or 31.4m" autocomplete="off">
-        <div class="hint">The defender's team power you must out-damage</div>
+        <label>💀 KOs already applied <b>(optional)</b></label>
+        <input id="curKos" type="text" inputmode="decimal" placeholder="e.g. 198" autocomplete="off">
+        <div class="hint">Forgot how much fodder you threw? Enter the station's current KOs and the sheet highlights that row with its debuff % and remaining power needed.</div>
       </div>
-      <div class="power-field">
-        <label>Main card power</label>
-        <input id="defCard" type="text" inputmode="decimal" placeholder="e.g. 16,474,014 or 16.5m" autocomplete="off">
-        <div class="hint">The defender's strongest card power</div>
-      </div>
-      <div class="elem-field">
-        <label>Defender element</label>
-        <select id="defEl">
-          <option value="fire" selected>🔥 Fire</option>
-          <option value="water">💧 Water</option>
-          <option value="grass">🌿 Grass</option>
-          <option value="unknown">❔ Unknown</option>
-        </select>
-      </div>
+      <div class="readout" id="kosReadout">Enter the opponent's power and (optionally) their current KOs.</div>
     </div>
   </section>
 
-  <section class="card elem-row" id="elemRow"></section>
-
-  <section class="card adj-panel">
-    <p class="card-title">🎯 Defender's special skills &amp; tier — KO adjustments</p>
-    <div class="flag-toggles">
-      <label class="flag-toggle lifeflip"><input type="checkbox" id="fLifeFlip">🔄 Life Flip +25%</label>
-      <label class="flag-toggle stun"><input type="checkbox" id="fStun">⚡ Stun +20%</label>
-      <label class="flag-toggle sleep"><input type="checkbox" id="fSleep">💤 Sleep +15%</label>
-      <label class="flag-toggle x6"><input type="checkbox" id="fX6">💥 6x+ DMG +30%</label>
-    </div>
-    <div class="tier-row">
-      <label for="tierSel">Tier disadvantage</label>
-      <select id="tierSel">
-        <option value="0" selected>None</option>
-        <option value="1">−1 tier · +15%</option>
-        <option value="2">−2 tiers · +30%</option>
-        <option value="3">−3 tiers · +45%</option>
-      </select>
-      <span class="note">When the defender's best card out-tiers your attacker's best card (+15% per tier step).</span>
-    </div>
+  <section class="ko-summary">
+    <div class="ksum"><div class="lbl">Current debuff</div><div class="num gold" id="sumDebuff">—</div><div class="sub" id="sumDebuffSub">from current KOs</div></div>
+    <div class="ksum"><div class="lbl">Power needed to defeat</div><div class="num green" id="sumNeed">—</div><div class="sub" id="sumNeedSub">at current debuff</div></div>
+    <div class="ksum"><div class="lbl">KOs to full 100% debuff</div><div class="num blue" id="sumFull">475</div><div class="sub">the game's cap · row 80</div></div>
   </section>
 
-  <section class="results">
-    <div class="card result-card" id="teamCard">
-      <p class="card-title">Team Power · needs debuff</p>
-      <div id="teamBody"></div>
+  <section class="card sheet-card">
+    <p class="card-title">📊 KO sheet · every KO range → debuff % → power needed to defeat</p>
+    <div class="sheet-scroll">
+      <table class="ko-sheet" id="koSheet">
+        <thead>
+          <tr>
+            <th>Estimated Teams</th>
+            <th>KO Range</th>
+            <th>Percentage</th>
+            <th>100% − D%</th>
+            <th>Power Needed to Defeat</th>
+          </tr>
+        </thead>
+        <tbody id="sheetBody"></tbody>
+      </table>
     </div>
-    <div class="card result-card" id="cardCard">
-      <p class="card-title">Main Card Power · needs debuff</p>
-      <div id="cardBody"></div>
-    </div>
+    <p class="sheet-note" id="sheetNote">Each row is <b>6 KOs = 1 team</b> = <b>+1.25% debuff</b>, rows 1-80 covering 1-480 KOs exactly like the spreadsheet. The <b>Power Needed to Defeat</b> = opponent's total power × (100% − debuff%). The game caps KOs at <b>475</b>, so rows 79-80 both read at/over the cap (row 80 = 100%).</p>
   </section>
-
-  <section class="card reverse-card">
-    <p class="card-title">🎯 Reverse — how much power can you beat?</p>
-    <div class="reverse-grid">
-      <div class="reverse-controls">
-        <div class="power-field">
-          <label>Your team power</label>
-          <input id="revPower" type="text" inputmode="decimal" placeholder="e.g. 21,217,000 or 21.2m" autocomplete="off">
-        </div>
-        <div class="debuff-slider">
-          <label style="font-size:10.5px;color:#8b949e;text-transform:uppercase;letter-spacing:.06em;">Debuff you can apply — <span class="cur" id="revDebuffCur">0%</span></label>
-          <input type="range" id="revDebuff" min="0" max="100" step="5" value="20">
-        </div>
-        <div class="elem-field">
-          <label>Your element</label>
-          <select id="revEl">
-            <option value="fire">🔥 Fire</option>
-            <option value="water" selected>💧 Water</option>
-            <option value="grass">🌿 Grass</option>
-            <option value="unknown">❔ Unknown</option>
-          </select>
-        </div>
-        <div class="elem-field">
-          <label>Defender element</label>
-          <select id="revDefEl">
-            <option value="fire" selected>🔥 Fire</option>
-            <option value="water">💧 Water</option>
-            <option value="grass">🌿 Grass</option>
-            <option value="unknown">❔ Unknown</option>
-          </select>
-        </div>
-      </div>
-      <div class="reverse-out" id="revOut"></div>
-    </div>
-  </section>
-
-  <details class="card ref">
-    <summary>📊 Debuff reference table (debuff % → KOs → fodder)</summary>
-    <div class="ref-grid" id="refGrid"></div>
-  </details>
 
   <details class="card legend">
     <summary>🧮 How the math works</summary>
     <div class="legend-body">
       This page uses the <b>identical math</b> as the Darkmoon VS calculator and your original spreadsheet:<br><br>
-      <code>debuff = ⌈ max(0, 1 − (your power × element multiplier) ÷ defender power) ⌉</code> rounded up to the nearest 5%.<br>
-      <code>KOs = debuff % × 480</code> · <code>fodder = KOs ÷ 6</code> — each <b>6-KO team</b> applies <b>1.25% debuff</b> · <b>KOs are capped at 475</b> (the game's max).<br><br>
-      <b>Element advantage</b> ×1.2 · <b>disadvantage</b> ×0.8 (Fire beats Grass, Grass beats Water, Water beats Fire).<br>
-      <b>Special-skill adjustments</b> multiply the KO count up when the <b>defender</b> carries them:
-      🔄 Life Flip +25% · ⚡ Stun +20% · 💤 Sleep +15% · 💥 6x+ DMG +30% — plus <b>tier disadvantage</b> +15% per tier step.<br><br>
-      The <b>Pure · no characters</b> number is the raw power + element answer; the <b>With characters</b> number includes the skill &amp; tier adjustments — exactly like the main calculator's two tiles.
+      Every <b>6-KO team</b> applied to a battle station adds <b>1.25% debuff</b>.<br>
+      <code>debuff % = teams × 1.25%</code> · <code>teams = KOs ÷ 6</code> · <code>KOs = debuff % × 480</code><br>
+      The station is defeated when your team power ≥ opponent power × <code>(100% − debuff%)</code> — that final number is the <b>Power Needed to Defeat</b> shown for every row.<br><br>
+      <b>KOs are capped at 475</b> (the game's max, = 100% debuff · 79 teams). Identical to the spreadsheet's AC4:AE table and the 475-row at 100%.
     </div>
   </details>
 
   <footer>
-    Computes <b>debuff = ⌈ max(0, 1 − (your power × element multiplier) ÷ defender power) ⌉</b> rounded up to the nearest 5%.<br>
-    Element advantage ×1.2 · disadvantage ×0.8 · KOs = debuff × 480 · fodder = KOs ÷ 6 · KOs capped at 475 (the game's max) — identical math to the spreadsheet's AC4:AE table.<br>
+    Computes <b>debuff % = KOs ÷ 6 × 1.25%</b> · <b>Power Needed to Defeat = opponent power × (100% − debuff%)</b> · KOs capped at 475 (the game's max).<br>
+    Identical math to the spreadsheet's KO sheet (each 6-KO team = 1.25% debuff).<br>
     Made for the <a href="https://t12-a.github.io/goc-darkmoon-calculator/" target="_blank" rel="noopener">GOC Darkmoon Calculator ↗</a>
   </footer>
 </div>
 
 <script>
-/* ============================== MATH ============================== */
-// Element rules: X beats Y (×1.2), X is weak to Z (×0.8)
-const ELEMENT = {
-  fire:  { beats: 'grass', weak: 'water' },
-  grass: { beats: 'water', weak: 'fire'  },
-  water: { beats: 'fire',  weak: 'grass' }
-};
-function elementMult(attackerEl, defenderEl) {
-  const a = String(attackerEl || '').toLowerCase();
-  const d = String(defenderEl || '').toLowerCase();
-  const rule = ELEMENT[a];
-  if (!rule) return 1;
-  if (rule.beats === d) return 1.2;
-  if (rule.weak === d) return 0.8;
-  return 1;
-}
-const MAX_KO = 475; // game caps battle-station KOs at 475
-function ceil05(v) { return Math.round(Math.ceil(Math.max(0, v) / 0.05) * 0.05 * 100) / 100; }
-// Special-skill flag labels + KO adjustments (same as the main calculator)
-const FLAG_META = {
-  lifeflip: { label: '🔄 Life Flip', adj: 0.25 },
-  stun:     { label: '⚡ Stun',      adj: 0.20 },
-  sleep:    { label: '💤 Sleep',     adj: 0.15 },
-  x6:       { label: '💥 6x+ DMG',   adj: 0.30 }
-};
+/* ============================== HELPERS ============================== */
+const $ = id => document.getElementById(id);
+const SHEET_ROWS = 80; // 80 rows = 1-480 KOs, each 6 KOs = 1 team = +1.25% (the spreadsheet's full KO sheet)
+
 function fmt(n) {
   if (n === null || n === undefined || isNaN(n)) return '—';
   return Math.round(n).toLocaleString('en-US');
@@ -385,192 +215,86 @@ function parsePower(s) {
   if (u === 'm') n *= 1e6;
   return n;
 }
-
-/* ============================== UI ============================== */
-const $ = id => document.getElementById(id);
-const ELEM_CLASS = { fire: 'el-fire', water: 'el-water', grass: 'el-grass' };
-function elChip(el) {
-  const k = String(el || '').toLowerCase();
-  return '<span class="el-chip ' + (ELEM_CLASS[k] || 'el-unknown') + '">● ' + (k === 'unknown' ? '—' : (k || '—')) + '</span>';
+// KOs: plain integer, optional commas
+function parseKos(s) {
+  if (!s) return null;
+  const t = String(s).trim();
+  if (!/^\d{1,6}(,\d{3})*$/.test(t)) return null;
+  const n = parseInt(t.replace(/,/g, ''), 10);
+  if (isNaN(n) || n <= 0) return null;
+  return n;
+}
+// Clean percent: 1.25 → "1.25", 2.5 → "2.5", 5 → "5", 98.75 → "98.75"
+function pctStr(frac) {
+  return (frac * 100).toFixed(2).replace(/\.?0+$/, '');
 }
 
-function renderElemRow() {
-  const attEl = $('attEl').value, defEl = $('defEl').value;
-  const mult = elementMult(attEl, defEl);
-  const kind = mult > 1 ? 'adv' : mult < 1 ? 'dis' : 'neu';
-  const label = mult > 1 ? 'Advantage' : mult < 1 ? 'Disadvantage' : 'Neutral';
-  const verdict = mult > 1 ? 'Your attack power gets a ×1.2 boost — need less debuff.'
-               : mult < 1 ? 'Your attack power is reduced to ×0.8 — need more debuff.'
-               : 'Same element (or unknown) — no modifier.';
-  $('elemRow').innerHTML =
-    '<div class="elem-pair">' + elChip(defEl) + '<span class="arrow">vs</span>' + elChip(attEl) + '</div>' +
-    '<span class="mult ' + kind + '">×' + mult.toFixed(1) + '</span>' +
-    '<span class="elem-verdict">' + label + ' — ' + verdict + '</span>';
-}
-
-function renderResultCard(bodyId, cardId, res, which) {
-  const body = $(bodyId), card = $(cardId);
-  const pureTile = (lbl, sub) =>
-    '<div class="tile pure"><div class="lbl">' + lbl + '</div><div class="num">—</div><div class="sub">' + sub + '</div></div>';
-  if (res.ratio === null) {
-    card.classList.remove('win', 'debuff');
-    body.innerHTML = '<div class="big"><span class="pct">—</span><span class="unit">% debuff</span></div>' +
-      '<div class="result-tiles">' +
-        pureTile('Pure · no characters', 'KOs from power &amp; element only') +
-        pureTile('With characters', 'KOs incl. skills &amp; tiers') +
-      '</div>' +
-      '<div class="verdict no show">⚠️ Enter power on both sides to calculate.</div>';
-    return;
-  }
-  const need = res.ratio > 0;
-  card.classList.toggle('win', !need);
-  card.classList.toggle('debuff', need);
-  const adjusted = res.adjKos !== null && res.adjKos !== res.kos;
-  const adjNote = res.adjust && res.adjust.reasons.length
-    ? '<div class="adj-note">🎯 Adjusted ×' + res.adjust.mult.toFixed(2) + ' — ' + res.adjust.reasons.join(' · ') + '</div>'
-    : '';
-  const pureKos = res.kos === null ? '—' : fmt(res.kos);
-  const pureFod = res.fodder === null ? '—' : fmt(res.fodder);
-  const charKos = res.adjKos === null ? pureKos : fmt(res.adjKos);
-  const charFod = res.adjFodder === null ? pureFod : fmt(res.adjFodder);
-  body.innerHTML =
-    '<div class="big"><span class="pct">' + (res.ratio * 100).toFixed(0) + '</span><span class="unit">% debuff</span></div>' +
-    '<div class="result-tiles">' +
-      '<div class="tile pure"><div class="lbl">Pure · no characters</div><div class="num">' + pureKos + '</div>' +
-        '<div class="sub">' + pureFod + ' fodder · power + element only</div></div>' +
-      '<div class="tile chara' + (adjusted ? ' adjusted' : '') + '"><div class="lbl">With characters</div><div class="num">' + charKos + '</div>' +
-        '<div class="sub">' + charFod + ' fodder · ' + (adjusted ? 'incl. skills &amp; tiers' : 'no character adjustments') + '</div></div>' +
-    '</div>' +
-    adjNote +
-    '<div class="verdict ' + (need ? 'no show' : 'yes show') + '">' +
-      (need ? '⚠️ You need a ' + (res.ratio * 100).toFixed(0) + '% debuff on the defender to win this ' + which + ' matchup.'
-            : '✅ No debuff needed — your ' + which + ' power already wins.') +
-    '</div>';
-}
-
-function renderRefTable() {
+/* ============================== KO SHEET ============================== */
+// Rows 1..80 match the spreadsheet exactly: each row = 6 KOs = 1 team = +1.25%.
+// Beyond 475 KOs (79 teams) the cap is reached, so rows 80+ show the same 100%.
+function renderSheet() {
+  const power = parsePower($('oppPower').value);
+  const kos = parseKos($('curKos').value);
   const rows = [];
-  for (let i = 1; i <= 20; i++) {
-    const r = Math.round(i * 0.05 * 100) / 100;
-    const kos = Math.min(i * 24, MAX_KO), fodder = Math.round(kos / 6);
-    rows.push('<div class="ref-cell"><span class="r">' + (r * 100).toFixed(0) + '%</span><span class="k"><b>' + kos + '</b> KOs</span><span class="f"><b>' + fodder + '</b> fodder</span></div>');
+  let curTeams = null;
+  if (kos !== null) curTeams = Math.min(Math.ceil(kos / 6), SHEET_ROWS);
+  for (let i = 1; i <= SHEET_ROWS; i++) {
+    const start = (i - 1) * 6 + 1;
+    const end = i * 6; // rows 1-80 cover 1-480 KOs exactly, matching the spreadsheet
+    const pct = Math.min(i * 0.0125, 1);
+    const need = power === null ? null : power * (1 - pct);
+    rows.push('<tr' + (i === curTeams ? ' class="cur"' : '') + '>' +
+      '<td>' + i + '</td>' +
+      '<td>' + start + '–' + end + '</td>' +
+      '<td class="pct">' + pctStr(pct) + '%</td>' +
+      '<td>' + pctStr(1 - pct) + '%</td>' +
+      '<td class="need">' + (need === null ? '—' : fmt(need)) + '</td></tr>');
   }
-  $('refGrid').innerHTML = rows.join('');
-}
+  $('sheetBody').innerHTML = rows.join('');
 
-function currentAdjust() {
-  const reasons = [];
-  let mult = 1;
-  [['lifeflip', 'fLifeFlip'], ['stun', 'fStun'], ['sleep', 'fSleep'], ['x6', 'fX6']].forEach(([f, id]) => {
-    if ($(id).checked) {
-      const m = FLAG_META[f];
-      mult += m.adj;
-      reasons.push(m.label + ' +' + Math.round(m.adj * 100) + '%');
-    }
-  });
-  const tiers = Number($('tierSel').value) || 0;
-  if (tiers > 0) {
-    const add = tiers * 0.15;
-    mult += add;
-    reasons.push('Tier disadvantage +' + Math.round(add * 100) + '%');
+  // Summary numbers
+  let curPct = null;
+  if (kos !== null) curPct = Math.min(Math.ceil(kos / 6) * 0.0125, 1);
+  const sumNeed = (power !== null && curPct !== null) ? power * (1 - curPct) : null;
+  $('sumDebuff').textContent = curPct === null ? '—' : pctStr(curPct) + '%';
+  $('sumDebuffSub').textContent = kos === null ? 'from current KOs'
+    : fmt(kos) + ' KOs = ' + Math.min(Math.ceil(kos / 6), SHEET_ROWS) + ' teams';
+  $('sumNeed').textContent = sumNeed === null ? '—' : fmt(sumNeed);
+  $('sumNeedSub').textContent = power === null ? 'enter opponent power' : (curPct === null ? 'at 0% debuff = full power' : 'at ' + pctStr(curPct) + '% debuff');
+
+  // Readout under the KOs input
+  if (kos !== null) {
+    const teams = Math.min(Math.ceil(kos / 6), SHEET_ROWS);
+    const pct = Math.min(teams * 0.0125, 1);
+    const need = power === null ? null : power * (1 - pct);
+    $('kosReadout').innerHTML =
+      '<b>' + fmt(kos) + ' KOs</b> = <b>' + teams + ' teams</b> → <span class="gold">' + pctStr(pct) + '% debuff</span>' +
+      (need === null
+        ? '.<br>Enter the opponent\'s total power to see what you need to beat them with.'
+        : ' → you\'d need <span class="green">' + fmt(need) + '</span> team power to defeat them.');
+  } else {
+    $('kosReadout').innerHTML = 'Enter the opponent\'s power and (optionally) their current KOs — the matching row glows <b style="color:#d29922">gold</b>.';
   }
-  return { mult: Math.min(mult, 2.5), reasons };
-}
 
-function compute() {
-  const mult = elementMult($('attEl').value, $('defEl').value);
-  const ratio = (atk, def) => {
-    if (!atk || !def) return null;
-    return ceil05(1 - (atk * mult) / def);
-  };
-  const adj = currentAdjust();
-  const toKos = r => r === null ? null : Math.min(Math.round((r / 0.05) * 24), MAX_KO);
-  const build = (atk, def) => {
-    const r = ratio(atk, def);
-    const kos = toKos(r);
-    const adjKos = kos === null ? null : Math.min(Math.round(kos * adj.mult), MAX_KO);
-    return {
-      ratio: r,
-      kos, fodder: kos === null ? null : Math.round(kos / 6),
-      adjKos, adjFodder: adjKos === null ? null : Math.round(adjKos / 6),
-      adjust: adj, mult
-    };
-  };
-  return {
-    team: build(parsePower($('attTeam').value), parsePower($('defTeam').value)),
-    card: build(parsePower($('attCard').value), parsePower($('defCard').value))
-  };
-}
-
-function renderReverse() {
-  const yourPower = parsePower($('revPower').value);
-  const d = Number($('revDebuff').value) / 100;
-  const mult = elementMult($('revEl').value, $('revDefEl').value);
-  const out = $('revOut');
-  if (!yourPower) {
-    out.innerHTML = '<div class="tile pure"><div class="lbl">Beatable power</div><div class="num">—</div><div class="sub">Enter your team power above.</div></div>';
-    return;
+  // Note under the sheet
+  const note = $('sheetNote');
+  if (power !== null) {
+    note.innerHTML = 'Each row is <b>6 KOs = 1 team</b>. <b>Power Needed to Defeat</b> = <b>' + fmt(power) + '</b> × (100% − debuff%). The row for your current KOs is highlighted <b style="color:#d29922">gold</b>. At <b>475 KOs</b> the station hits the <b>100% debuff cap</b> (rows beyond that are greyed out).';
+  } else {
+    note.innerHTML = 'Each row is <b>6 KOs = 1 team</b>. The <b>Power Needed to Defeat</b> = opponent\'s total power × (100% − debuff%). At <b>475 KOs</b> the station hits the <b>100% debuff cap</b> (rows beyond that are greyed out).';
   }
-  if (d >= 1) {
-    out.innerHTML = '<div class="tile chara adjusted"><div class="lbl">Max power you can beat</div><div class="num">∞</div>' +
-      '<div class="sub">A 100% debuff zeros the defender — you can beat <b>anything</b>.</div></div>' +
-      '<div class="tile pure"><div class="lbl">Without debuff</div><div class="num">' + fmt(yourPower * mult) + '</div>' +
-      '<div class="sub">Raw power you can out-damage with ' + (mult > 1 ? 'element advantage' : mult < 1 ? 'element disadvantage' : 'neutral element') + '.</div></div>';
-    return;
-  }
-  // With a debuff of d on the defender, their effective power becomes (1 - d) × def.
-  // You win when yourPower × mult ≥ (1 - d) × def  →  def ≤ yourPower × mult ÷ (1 - d)
-  const beatable = yourPower * mult / (1 - d);
-  const kind = mult > 1 ? 'adv' : mult < 1 ? 'dis' : 'neu';
-  out.innerHTML =
-    '<div class="tile chara' + (d > 0 ? ' adjusted' : '') + '"><div class="lbl">Max power you can beat</div><div class="num">' + fmt(beatable) + '</div>' +
-      '<div class="sub">≈ <b>' + (beatable / 1e6).toFixed(1) + 'm</b> — with a <b>' + Math.round(d * 100) + '% debuff</b> · element ×' + mult.toFixed(1) + '</div></div>' +
-    '<div class="tile pure"><div class="lbl">Without debuff</div><div class="num">' + fmt(yourPower * mult) + '</div>' +
-      '<div class="sub">Raw power you can out-damage with ' + (kind === 'adv' ? 'element advantage' : kind === 'dis' ? 'element disadvantage' : 'neutral element') + '.</div></div>' +
-    '<div class="tile ' + (beatable >= yourPower ? 'chara' : 'pure') + '"><div class="lbl">Full teams to field</div><div class="num">' + fmt(Math.max(1, Math.ceil(beatable / yourPower))) + '</div>' +
-      '<div class="sub">How many full-strength teams like yours stack up to that power.</div></div>';
 }
 
-function renderAll() {
-  renderElemRow();
-  const res = compute();
-  renderResultCard('teamBody', 'teamCard', res.team, 'team-power');
-  renderResultCard('cardBody', 'cardCard', res.card, 'card-power');
-  renderRefTable();
-  renderReverse();
-}
+function renderAll() { renderSheet(); }
 
-/* Flag toggles light up when checked */
-document.querySelectorAll('.flag-toggle').forEach(lbl => {
-  const cb = lbl.querySelector('input');
-  const sync = () => lbl.classList.toggle('on', cb.checked);
-  cb.addEventListener('change', sync);
-  sync();
-});
-
-['attTeam', 'attCard', 'defTeam', 'defCard', 'attEl', 'defEl'].forEach(id =>
-  $(id).addEventListener('input', renderAll));
-$('tierSel').addEventListener('change', renderAll);
-document.querySelectorAll('.flag-toggle input').forEach(cb => cb.addEventListener('change', renderAll));
-
-['revPower', 'revEl', 'revDefEl'].forEach(id => $(id).addEventListener('input', renderReverse));
-$('revDebuff').addEventListener('input', () => {
-  $('revDebuffCur').textContent = $('revDebuff').value + '%';
-  renderReverse();
-});
+/* ============================== EVENTS ============================== */
+$('oppPower').addEventListener('input', renderAll);
+$('curKos').addEventListener('input', renderAll);
 
 $('fillBtn').addEventListener('click', () => {
-  // Example: Frostheim attacker (water) vs Darkmoon defender (fire), with the defender's sleep + 6x skills.
-  $('attTeam').value = '21,217,000'; $('attCard').value = '10,200,000';
-  $('defTeam').value = '31,397,544'; $('defCard').value = '16,474,014';
-  $('attEl').value = 'water'; $('defEl').value = 'fire';
-  $('fSleep').checked = true; $('fX6').checked = true;
-  $('fLifeFlip').checked = false; $('fStun').checked = false;
-  $('tierSel').value = '0';
-  document.querySelectorAll('.flag-toggle').forEach(lbl => {
-    const cb = lbl.querySelector('input');
-    lbl.classList.toggle('on', cb.checked);
-  });
+  // Example: River 1 (Darkmoon) at 31,397,544 total power, 198 KOs already applied.
+  $('oppPower').value = '31,397,544';
+  $('curKos').value = '198';
   renderAll();
 });
 
@@ -578,13 +302,12 @@ $('shareBtn').addEventListener('click', async () => {
   const url = location.href;
   if (/^file:|^about:/.test(url)) return;
   try {
-    if (navigator.share) { await navigator.share({ title: 'GOC KO Calculator', text: 'GOC KO Calculator — debuff %, KOs & fodder from your power vs the power you need to beat:', url }); return; }
+    if (navigator.share) { await navigator.share({ title: 'GOC KO Calculator', text: 'GOC KO Calculator — battle-station debuff sheet:', url }); return; }
     await navigator.clipboard.writeText(url);
   } catch (e) {}
 });
 
 /* Boot */
-$('revDebuffCur').textContent = $('revDebuff').value + '%';
 renderAll();
 </script>
 </body>
