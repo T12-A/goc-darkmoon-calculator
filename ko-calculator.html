@@ -327,7 +327,7 @@
     <div class="legend-body">
       This page uses the <b>identical math</b> as the Darkmoon VS calculator and your original spreadsheet:<br><br>
       <code>debuff = ⌈ max(0, 1 − (your power × element multiplier) ÷ defender power) ⌉</code> rounded up to the nearest 5%.<br>
-      <code>KOs = debuff % × 480</code> · <code>fodder = KOs ÷ 6</code> — each <b>6-KO team</b> applies <b>1.25% debuff</b>.<br><br>
+      <code>KOs = debuff % × 480</code> · <code>fodder = KOs ÷ 6</code> — each <b>6-KO team</b> applies <b>1.25% debuff</b> · <b>KOs are capped at 475</b> (the game's max).<br><br>
       <b>Element advantage</b> ×1.2 · <b>disadvantage</b> ×0.8 (Fire beats Grass, Grass beats Water, Water beats Fire).<br>
       <b>Special-skill adjustments</b> multiply the KO count up when the <b>defender</b> carries them:
       🔄 Life Flip +25% · ⚡ Stun +20% · 💤 Sleep +15% · 💥 6x+ DMG +30% — plus <b>tier disadvantage</b> +15% per tier step.<br><br>
@@ -337,7 +337,7 @@
 
   <footer>
     Computes <b>debuff = ⌈ max(0, 1 − (your power × element multiplier) ÷ defender power) ⌉</b> rounded up to the nearest 5%.<br>
-    Element advantage ×1.2 · disadvantage ×0.8 · KOs = debuff × 480 · fodder = KOs ÷ 6 — identical math to the spreadsheet's AC4:AE table.<br>
+    Element advantage ×1.2 · disadvantage ×0.8 · KOs = debuff × 480 · fodder = KOs ÷ 6 · KOs capped at 475 (the game's max) — identical math to the spreadsheet's AC4:AE table.<br>
     Made for the <a href="https://t12-a.github.io/goc-darkmoon-calculator/" target="_blank" rel="noopener">GOC Darkmoon Calculator ↗</a>
   </footer>
 </div>
@@ -359,6 +359,7 @@ function elementMult(attackerEl, defenderEl) {
   if (rule.weak === d) return 0.8;
   return 1;
 }
+const MAX_KO = 475; // game caps battle-station KOs at 475
 function ceil05(v) { return Math.round(Math.ceil(Math.max(0, v) / 0.05) * 0.05 * 100) / 100; }
 // Special-skill flag labels + KO adjustments (same as the main calculator)
 const FLAG_META = {
@@ -451,7 +452,7 @@ function renderRefTable() {
   const rows = [];
   for (let i = 1; i <= 20; i++) {
     const r = Math.round(i * 0.05 * 100) / 100;
-    const kos = i * 24, fodder = kos / 6;
+    const kos = Math.min(i * 24, MAX_KO), fodder = Math.round(kos / 6);
     rows.push('<div class="ref-cell"><span class="r">' + (r * 100).toFixed(0) + '%</span><span class="k"><b>' + kos + '</b> KOs</span><span class="f"><b>' + fodder + '</b> fodder</span></div>');
   }
   $('refGrid').innerHTML = rows.join('');
@@ -483,11 +484,11 @@ function compute() {
     return ceil05(1 - (atk * mult) / def);
   };
   const adj = currentAdjust();
-  const toKos = r => r === null ? null : Math.round((r / 0.05) * 24);
+  const toKos = r => r === null ? null : Math.min(Math.round((r / 0.05) * 24), MAX_KO);
   const build = (atk, def) => {
     const r = ratio(atk, def);
     const kos = toKos(r);
-    const adjKos = kos === null ? null : Math.round(kos * adj.mult);
+    const adjKos = kos === null ? null : Math.min(Math.round(kos * adj.mult), MAX_KO);
     return {
       ratio: r,
       kos, fodder: kos === null ? null : Math.round(kos / 6),

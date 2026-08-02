@@ -433,7 +433,7 @@
 
   <footer>
     Computes <b>debuff = ⌈ max(0, 1 − (attacker power × element multiplier) ÷ defender power) ⌉</b> rounded up to the nearest 5%.<br>
-    Element advantage ×1.2 · disadvantage ×0.8 · KOs = debuff × 480 · fodder = KOs ÷ 6 — identical math to the spreadsheet's AC4:AE table.<br>
+    Element advantage ×1.2 · disadvantage ×0.8 · KOs = debuff × 480 · fodder = KOs ÷ 6 · KOs capped at 475 (the game's max) — identical math to the spreadsheet's AC4:AE table.<br>
     Character identification &amp; ratings from the <a href="https://tokyodebunker.miraheze.org/wiki/List_of_Character_Cards" target="_blank" rel="noopener">Tokyo Debunker Wiki</a> and the Tokyo Debunker Full Data.
   </footer>
 </div>
@@ -462,6 +462,7 @@ function elementMult(attackerEl, defenderEl) {
   if (rule.weak === d) return 0.8;
   return 1;
 }
+const MAX_KO = 475; // game caps battle-station KOs at 475
 function ceil05(v) { return Math.round(Math.ceil(Math.max(0, v) / 0.05) * 0.05 * 100) / 100; }
 // --- KO adjustment: special skills + tier disadvantage ---
 const TIER_RANK = { A: 0, B: 1, C: 2, D: 3 };
@@ -510,10 +511,10 @@ function compute(attacker, defender) {
   };
   const teamRatio = ratio(attacker.team, defender.team);
   const cardRatio = ratio(attacker.card, defender.card);
-  const toKos = r => r === null ? null : Math.round((r / 0.05) * 24);
+  const toKos = r => r === null ? null : Math.min(Math.round((r / 0.05) * 24), MAX_KO);
   const teamKos = toKos(teamRatio), cardKos = toKos(cardRatio);
   const adj = koAdjustment(attacker, defender);
-  const adjKos = kos => kos === null ? null : Math.round(kos * adj.mult);
+  const adjKos = kos => kos === null ? null : Math.min(Math.round(kos * adj.mult), MAX_KO);
   const aTeamKos = adjKos(teamKos), aCardKos = adjKos(cardKos);
   return {
     mult,
@@ -752,7 +753,7 @@ function renderRefTable() {
   const rows = [];
   for (let i = 1; i <= 20; i++) {
     const r = Math.round(i * 0.05 * 100) / 100;
-    const kos = i * 24, fodder = kos / 6;
+    const kos = Math.min(i * 24, MAX_KO), fodder = Math.round(kos / 6);
     rows.push('<div class="ref-cell"><span class="r">' + (r * 100).toFixed(0) + '%</span><span class="k"><b>' + kos + '</b> KOs</span><span class="f"><b>' + fodder + '</b> fodder</span></div>');
   }
   $('refGrid').innerHTML = rows.join('');
