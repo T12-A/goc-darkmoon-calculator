@@ -133,6 +133,9 @@
   .char-card .who b { font-size: 13px; color: #e6edf3; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .char-card .who span { font-size: 11.5px; color: #8b949e; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .char-card .pw { font-size: 12px; font-weight: 700; color: #c9d1d9; font-family: ui-monospace, Consolas, monospace; }
+  .char-card .who .pw-big { font-size: 16px; font-weight: 800; color: #ffd479; margin-top: 3px; letter-spacing: .02em; }
+  .cards-sub { font-size: 10.5px; color: #6e7681; margin: -4px 0 10px; letter-spacing: .03em; line-height: 1.5; }
+  .cards-sub b { color: #c9d1d9; }
   .spd { font-size: 10.5px; font-weight: 800; border-radius: 6px; padding: 2px 7px; letter-spacing: .02em; white-space: nowrap; flex-shrink: 0; }
   .spd.faster { color: #3fb950; background: rgba(63,185,80,.13); border: 1px solid rgba(63,185,80,.4); }
   .spd.slower { color: #f85149; background: rgba(248,81,73,.13); border: 1px solid rgba(248,81,73,.4); }
@@ -643,7 +646,7 @@ function renderCharCards(container, member, opponent) {
     }
     return '<div class="char-card">' + img +
       '<div class="who">' + identity + '<b>' + m.card + '</b>' +
-      '<span>' + b.raw + (b.power ? ' · ' + fmtShort(b.power) + ' power' : '') + '</span></div>' +
+      '<span>' + b.raw + '</span>' + (b.power ? '<span class="pw pw-big" title="Total power ' + fmt(b.power) + '">' + fmtShort(b.power) + ' power</span>' : '') + '</div>' +
       '<div class="rating">' + rtTier(m.tier) + rtAtk(m.atk) + rtTu(m.speed) + '</div>' +
       '<div class="flags">' + flagChips(m.flags) + '</div>' +
       spd +
@@ -654,6 +657,7 @@ function renderCharCards(container, member, opponent) {
   container.innerHTML =
     '<button type="button" class="cards-toggle" aria-expanded="true" onclick="toggleCards(this)">' +
       '<span class="chev">▼</span> Identified cards (' + best.length + ')</button>' +
+    '<div class="cards-sub"><b>A/B/C/D</b> = Case Tier (A best) · <b>P/S</b> = ATK grade · <b>TU</b> = True Speed ⌊(1000−Speed)÷10⌋ — lower TU acts first</div>' +
     '<div class="cards-body">' + html + '</div>';
 }
 
