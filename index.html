@@ -146,6 +146,35 @@
   .ko-note { margin-top: 10px; color: #8b949e; font-size: 12px; }
   .ko-note a { color: #58a6ff; }
 
+  /* Matchup Finder tab */
+  .matchup-panel { margin-top: 26px; padding: 22px; }
+  .matchup-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+  .matchup-bar .lbl { font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: #8b949e; }
+  .matchup-bar select { min-width: 220px; }
+  .matchup-bar .hint { flex: 1; min-width: 220px; color: #8b949e; font-size: 12.5px; line-height: 1.5; }
+  .matchup-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .match-row { display: flex; flex-direction: column; gap: 8px; background: #161b22; border: 1px solid #21262d; border-radius: 12px; padding: 14px; cursor: pointer; transition: transform .15s, border-color .15s, box-shadow .15s; position: relative; }
+  .match-row:hover { transform: translateY(-2px); border-color: #30363d; }
+  .match-row.best { border-color: #d29922; background: linear-gradient(180deg, rgba(210,153,34,.1), #161b22); box-shadow: 0 0 0 1px rgba(210,153,34,.35), 0 6px 24px rgba(210,153,34,.08); }
+  .match-row.best::before { content: "🏆"; position: absolute; top: -11px; left: 12px; font-size: 18px; filter: drop-shadow(0 2px 6px rgba(210,153,34,.6)); }
+  .match-row.best .rank { color: #d29922; }
+  .match-row .top { display: flex; align-items: center; gap: 10px; }
+  .match-row .rank { font-size: 15px; font-weight: 800; font-family: ui-monospace, Consolas, monospace; color: #8b949e; min-width: 22px; }
+  .match-row .who { flex: 1; min-width: 0; }
+  .match-row .who .nm { font-size: 13.5px; font-weight: 700; color: #e6edf3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  .match-row .who .pw { font-size: 11px; color: #6e7681; font-family: ui-monospace, Consolas, monospace; display: block; margin-top: 1px; }
+  .match-row .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .match-row .stat { background: #0d1117; border: 1px solid #21262d; border-radius: 9px; padding: 7px 8px; text-align: center; }
+  .match-row .stat .l { font-size: 9.5px; color: #6e7681; text-transform: uppercase; letter-spacing: .06em; }
+  .match-row .stat .v { font-size: 15px; font-weight: 800; font-family: ui-monospace, Consolas, monospace; margin-top: 1px; }
+  .match-row .stat.deb .v { color: #d29922; }
+  .match-row .stat.kos .v { color: #ffd479; }
+  .match-row .stat.fod .v { color: #58a6ff; }
+  .match-row .stat.win .v { color: #3fb950; }
+  .match-row .why { font-size: 10.5px; color: #6e7681; line-height: 1.45; }
+  .match-row .why b { color: #8b949e; }
+  .match-empty { padding: 26px; text-align: center; color: #8b949e; font-size: 13.5px; grid-column: 1 / -1; }
+
   /* KO adjustment note */
   .adj-note { margin-top: 10px; padding: 8px 12px; border-radius: 9px; background: rgba(210,153,34,.08); border: 1px solid rgba(210,153,34,.3); font-size: 12px; color: #d29922; line-height: 1.6; }
   .adj-note b { color: #ffd479; }
@@ -247,6 +276,7 @@
 
   <nav class="tabs" aria-label="Calculator views">
     <button type="button" class="tab-btn active" data-tab="vs">⚔️ VS Calculator</button>
+    <button type="button" class="tab-btn" data-tab="matchup">🎯 Matchup Finder</button>
     <button type="button" class="tab-btn" data-tab="ko">🗡️ KO Calculator</button>
   </nav>
 
@@ -326,6 +356,18 @@
     </div>
   </details>
   </section><!-- /tab-vs -->
+
+  <section class="tab-panel" id="tab-matchup">
+    <section class="card matchup-panel">
+      <p class="card-title">🎯 Matchup Finder — pick a Darkmoon defender, get the best Frostheim counters</p>
+      <div class="matchup-bar">
+        <span class="lbl">🛡 Defender</span>
+        <select id="matchDefSel" title="Choose the Darkmoon defender you want to beat"></select>
+        <span class="hint">Every Frostheim attacker is ranked against this defender by <b>KOs needed</b> (fewest = best). 🏆 marks the best counter. Click any card to load it into the VS calculator.</span>
+      </div>
+      <div class="matchup-grid" id="matchupGrid"></div>
+    </section>
+  </section>
 
   <section class="tab-panel" id="tab-ko">
     <iframe class="ko-frame" src="ko-calculator.html" title="Tokyo Debunker KO Calculator" loading="lazy"></iframe>
@@ -668,6 +710,8 @@ function renderAll() {
   renderResultCard('teamBody', 'teamCard', res.team, 'team-power', res.adjust);
   renderResultCard('cardBody', 'cardCard', res.card, 'card-power', res.adjust);
   renderRefTable();
+  populateMatchDefSel();
+  if ($('tab-matchup') && $('tab-matchup').classList.contains('active')) renderMatchups();
 }
 
 defSearch.addEventListener('input', e => { defFilter = e.target.value; renderAll(); });
@@ -899,11 +943,83 @@ drop.addEventListener('click', () => $('fileInput').click());
 $('fileInput').addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); });
 $('importBtn').addEventListener('click', () => $('fileInput').click());
 
+/* ============================== MATCHUP FINDER ============================== */
+const matchDefSel = $('matchDefSel');
+// Keep the defender dropdown in sync with the VS calculator's selection.
+function populateMatchDefSel() {
+  const cur = defSel ? defSel.name : '';
+  const html = ROSTER.defenders.map(d =>
+    '<option value="' + d.name.replace(/"/g, '&quot;') + '"' + (d.name === cur ? ' selected' : '') + '>' + d.name + '</option>'
+  ).join('');
+  if (matchDefSel.innerHTML !== html) matchDefSel.innerHTML = html;
+}
+// Rank every Frostheim attacker against one defender — fewest adjusted KOs first.
+function rankMatchups(defender) {
+  const rows = ROSTER.attackers.map(a => ({ a, res: compute(a, defender) }));
+  rows.sort((x, y) => {
+    const kx = x.res.team.adjKos, ky = y.res.team.adjKos;
+    if (kx === null && ky === null) return 0;
+    if (kx === null) return 1;
+    if (ky === null) return -1;
+    if (kx !== ky) return kx - ky;
+    const cx = x.res.card.adjKos, cy = y.res.card.adjKos;
+    if (cx === null && cy !== null) return 1;
+    if (cx !== null && cy === null) return -1;
+    if (cx !== null && cy !== null && cx !== cy) return cx - cy;
+    return (y.a.team || 0) - (x.a.team || 0);
+  });
+  return rows;
+}
+function renderMatchups() {
+  const grid = $('matchupGrid');
+  if (!grid) return;
+  const def = defSel || ROSTER.defenders[0];
+  if (!def) { grid.innerHTML = '<div class="match-empty">No Darkmoon defenders loaded.</div>'; return; }
+  const rows = rankMatchups(def);
+  if (!rows.length) { grid.innerHTML = '<div class="match-empty">No Frostheim attackers loaded.</div>'; return; }
+  grid.innerHTML = rows.map((row, i) => {
+    const a = row.a, res = row.res, t = res.team;
+    const win = t.ratio !== null && t.ratio <= 0;
+    const debTxt = t.ratio === null ? '—' : (t.ratio * 100).toFixed(0) + '%';
+    const kos = t.adjKos === null ? (t.kos === null ? '—' : fmt(t.kos)) : fmt(t.adjKos);
+    const fod = t.adjFodder === null ? (t.fodder === null ? '—' : fmt(t.adjFodder)) : fmt(t.adjFodder);
+    const why = [];
+    if (res.mult !== 1) why.push('<b>×' + res.mult.toFixed(1) + ' element</b>');
+    if (res.adjust && res.adjust.reasons.length) why.push(res.adjust.reasons.join(' · '));
+    return '<div class="match-row' + (i === 0 && t.adjKos !== null ? ' best' : '') + '" data-att="' + a.name.replace(/"/g, '&quot;') + '" title="Load ' + a.name + ' into the VS calculator">' +
+      '<div class="top"><span class="rank">' + (i + 1) + '</span>' +
+      '<span class="who"><span class="nm">' + a.name + '</span>' + elChip(a.element) + '<span class="pw">team ' + fmt(a.team) + ' · card ' + fmt(a.card) + '</span></span></div>' +
+      '<div class="stats">' +
+        '<div class="stat' + (win ? ' win' : ' deb') + '"><div class="l">Debuff</div><div class="v">' + debTxt + '</div></div>' +
+        '<div class="stat kos"><div class="l">KOs</div><div class="v">' + kos + '</div></div>' +
+        '<div class="stat fod"><div class="l">Fodder</div><div class="v">' + fod + '</div></div>' +
+      '</div>' +
+      (why.length ? '<div class="why">' + why.join(' · ') + '</div>' : '') +
+    '</div>';
+  }).join('');
+}
+matchDefSel.addEventListener('change', () => {
+  const d = ROSTER.defenders.find(m => m.name === matchDefSel.value);
+  if (d) { defSel = d; renderAll(); }
+});
+// Clicking a matchup card loads it into the VS calculator.
+document.addEventListener('click', e => {
+  const row = e.target.closest('.match-row[data-att]');
+  if (!row) return;
+  const att = ROSTER.attackers.find(m => m.name === row.dataset.att);
+  if (!att) return;
+  attSel = att;
+  const vsBtn = document.querySelector('.tab-btn[data-tab="vs"]');
+  if (vsBtn) vsBtn.click();
+  renderAll();
+});
+
 /* Tab switching */
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + btn.dataset.tab));
+    if (btn.dataset.tab === 'matchup') { populateMatchDefSel(); renderMatchups(); }
   });
 });
 
