@@ -204,12 +204,13 @@
   .tile:hover { transform: translateY(-2px); border-color: #30363d; }
   .tile .lbl { font-size: 10.5px; color: #8b949e; text-transform: uppercase; letter-spacing: .07em; }
   .tile .num { font-size: 28px; font-weight: 800; margin-top: 4px; font-family: ui-monospace, Consolas, monospace; color: #e6edf3; }
-  .tile.kos .num { color: #d29922; }
-  .tile.fodder .num { color: #58a6ff; }
   .tile .sub { font-size: 11px; color: #6e7681; margin-top: 2px; }
-  .tile.adjusted .num { color: #ffd479; }
-  .tile.adjusted .sub { color: #d29922; }
-  .tile.adjusted .from { font-size: 10.5px; color: #8b949e; margin-top: 1px; }
+  .tile.pure .num { color: #8b949e; }
+  .tile.pure .lbl { color: #6e7681; }
+  .tile.chara .num { color: #ffd479; }
+  .tile.chara .sub { color: #8b949e; }
+  .tile.chara.adjusted { border-color: rgba(210,153,34,.55); background: linear-gradient(180deg, rgba(210,153,34,.10), #161b22); box-shadow: 0 0 0 1px rgba(210,153,34,.25); }
+  .tile.chara.adjusted .sub { color: #d29922; }
   .verdict { margin-top: 14px; padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; display: none; }
   .verdict.show { display: block; }
   .verdict.yes { background: rgba(63,185,80,.1); border: 1px solid rgba(63,185,80,.35); color: #3fb950; }
@@ -655,12 +656,14 @@ function renderElemRow() {
 
 function renderResultCard(bodyId, cardId, res, which, adjust) {
   const body = $(bodyId), card = $(cardId);
+  const pureTile = (lbl, sub) =>
+    '<div class="tile pure"><div class="lbl">' + lbl + '</div><div class="num">—</div><div class="sub">' + sub + '</div></div>';
   if (res.ratio === null) {
     card.classList.remove('win', 'debuff');
     body.innerHTML = '<div class="big"><span class="pct">—</span><span class="unit">% debuff</span></div>' +
       '<div class="result-tiles">' +
-        '<div class="tile kos"><div class="lbl">KOs needed</div><div class="num">—</div><div class="sub">KOs to defeat the Darkmoon defender</div></div>' +
-        '<div class="tile fodder"><div class="lbl">Fodder needed</div><div class="num">—</div><div class="sub">fodder attacks</div></div>' +
+        pureTile('Pure · no characters', 'KOs from power &amp; element only') +
+        pureTile('With characters', 'KOs incl. skills &amp; tiers') +
       '</div>' +
       '<div class="verdict no show">⚠️ Missing power data for one side — pick members with team &amp; card power to calculate.</div>';
     return;
@@ -672,13 +675,17 @@ function renderResultCard(bodyId, cardId, res, which, adjust) {
   const adjNote = adjust && adjust.reasons.length
     ? '<div class="adj-note">🎯 Adjusted ×' + adjust.mult.toFixed(2) + ' — ' + adjust.reasons.join(' · ') + '</div>'
     : '';
+  const pureKos = res.kos === null ? '—' : fmt(res.kos);
+  const pureFod = res.fodder === null ? '—' : fmt(res.fodder);
+  const charKos = res.adjKos === null ? pureKos : fmt(res.adjKos);
+  const charFod = res.adjFodder === null ? pureFod : fmt(res.adjFodder);
   body.innerHTML =
     '<div class="big"><span class="pct">' + (res.ratio * 100).toFixed(0) + '</span><span class="unit">% debuff</span></div>' +
     '<div class="result-tiles">' +
-      '<div class="tile kos' + (adjusted ? ' adjusted' : '') + '"><div class="lbl">KOs needed</div><div class="num">' + (res.adjKos === null ? res.kos : res.adjKos) + '</div>' +
-        (adjusted ? '<div class="sub">' + res.kos + ' base KOs</div>' : '<div class="sub">KOs to defeat the Darkmoon defender</div>') +
-        '<div class="from"></div></div>' +
-      '<div class="tile fodder"><div class="lbl">Fodder needed</div><div class="num">' + (res.adjFodder === null ? res.fodder : res.adjFodder) + '</div><div class="sub">fodder attacks</div></div>' +
+      '<div class="tile pure"><div class="lbl">Pure · no characters</div><div class="num">' + pureKos + '</div>' +
+        '<div class="sub">' + pureFod + ' fodder · power + element only</div></div>' +
+      '<div class="tile chara' + (adjusted ? ' adjusted' : '') + '"><div class="lbl">With characters</div><div class="num">' + charKos + '</div>' +
+        '<div class="sub">' + charFod + ' fodder · ' + (adjusted ? 'incl. skills &amp; tiers' : 'no character adjustments') + '</div></div>' +
     '</div>' +
     adjNote +
     '<div class="verdict ' + (need ? 'no show' : 'yes show') + '">' +
