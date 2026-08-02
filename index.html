@@ -152,6 +152,10 @@
   .matchup-bar .lbl { font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: #8b949e; }
   .matchup-bar select { min-width: 220px; }
   .matchup-bar .hint { flex: 1; min-width: 220px; color: #8b949e; font-size: 12.5px; line-height: 1.5; }
+  .def-chip { display: inline-flex; align-items: center; gap: 8px; background: #161b22; border: 1px solid #30363d; border-radius: 9px; padding: 7px 12px; font-size: 12.5px; color: #c9d1d9; white-space: nowrap; }
+  .def-chip b { color: #fff; font-weight: 700; }
+  .def-chip .pw { font-family: ui-monospace, Consolas, monospace; color: #d29922; font-weight: 700; }
+  .def-chip .pw-card { color: #c9d1d9; }
   .matchup-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
   .match-row { display: flex; flex-direction: column; gap: 8px; background: #161b22; border: 1px solid #21262d; border-radius: 12px; padding: 14px; cursor: pointer; transition: transform .15s, border-color .15s, box-shadow .15s; position: relative; }
   .match-row:hover { transform: translateY(-2px); border-color: #30363d; }
@@ -364,6 +368,7 @@
       <div class="matchup-bar">
         <span class="lbl">🛡 Defender</span>
         <select id="matchDefSel" title="Choose the Darkmoon defender you want to beat"></select>
+        <span class="def-chip" id="matchDefPower" title="The Darkmoon defender's total team power you need to out-damage"></span>
         <span class="hint">Every Frostheim attacker is ranked against this defender by <b>KOs needed</b> (fewest = best). 🏆 marks the best counter. Click any card to load it into the VS calculator.</span>
       </div>
       <div class="matchup-grid" id="matchupGrid"></div>
@@ -977,11 +982,19 @@ function rankMatchups(defender) {
   });
   return rows;
 }
+function renderMatchDefPower() {
+  const el = $('matchDefPower');
+  if (!el) return;
+  const def = defSel || ROSTER.defenders[0];
+  if (!def) { el.innerHTML = ''; return; }
+  el.innerHTML = '🛡 <b>' + def.name + '</b> · ⚔️ team <span class="pw">' + fmt(def.team) + '</span> · card <span class="pw pw-card">' + fmt(def.card) + '</span> ' + elChip(def.element);
+}
 function renderMatchups() {
   const grid = $('matchupGrid');
   if (!grid) return;
   const def = defSel || ROSTER.defenders[0];
   if (!def) { grid.innerHTML = '<div class="match-empty">No Darkmoon defenders loaded.</div>'; return; }
+  renderMatchDefPower();
   const rows = rankMatchups(def);
   if (!rows.length) { grid.innerHTML = '<div class="match-empty">No Frostheim attackers loaded.</div>'; return; }
   grid.innerHTML = rows.map((row, i) => {
