@@ -651,8 +651,8 @@ function renderCharCards(container, member, opponent) {
   const html = best.map(b => {
     const m = b.matched;
     if (!m) {
-      return '<div class="char-card"><div class="who"><b>' + b.first + '</b>' +
-        '<span>' + b.raw + ' — no match</span></div>' +
+      return '<div class="char-card"><div class="who"><b>' + esc(b.first) + '</b>' +
+        '<span>' + esc(b.raw) + ' — no match</span></div>' +
         (b.power ? '<span class="pw">' + fmtShort(b.power) + '</span>' : '') + '</div>';
     }
     const tu = tuOfSpeed(m.speed);
@@ -664,8 +664,8 @@ function renderCharCards(container, member, opponent) {
       : '';
     const spd = tu !== null && oppTU !== null ? '<div class="spd-wrap">' + speedChip(tu, oppTU) + '</div>' : '';
     return '<div class="char-card">' + img +
-      '<div class="who">' + identity + '<b>' + m.card + '</b>' +
-      '<span>' + b.raw + '</span>' + (b.power ? '<span class="pw pw-big" title="Total power ' + fmt(b.power) + '">' + fmtShort(b.power) + ' power</span>' : '') + '</div>' +
+      '<div class="who">' + identity + '<b>' + esc(m.card) + '</b>' +
+      '<span>' + esc(b.raw) + '</span>' + (b.power ? '<span class="pw pw-big" title="Total power ' + fmt(b.power) + '">' + fmtShort(b.power) + ' power</span>' : '') + '</div>' +
       '<div class="rating">' + rtTier(m.tier) + rtAtk(m.atk) + rtTu(m.speed) + '</div>' +
       '<div class="flags">' + flagChips(m.flags) + '</div>' +
       spd +
@@ -689,10 +689,10 @@ function toggleCards(btn) {
 function renderRoster(el, members, filter, selected, side) {
   const q = filter.trim().toLowerCase();
   const list = members.filter(m => !q || m.name.toLowerCase().includes(q));
-  if (!list.length) { el.innerHTML = '<li class="empty">No members match “' + filter + '”</li>'; return; }
+  if (!list.length) { el.innerHTML = '<li class="empty">No members match “' + esc(filter) + '”</li>'; return; }
   el.innerHTML = list.map(m =>
-    '<li data-side="' + side + '" data-name="' + m.name.replace(/"/g, '&quot;') + '" class="' + (selected && selected.name === m.name ? 'active' : '') + '">' +
-      '<span class="nm">' + m.name + '</span>' +
+    '<li data-side="' + side + '" data-name="' + esc(m.name) + '" class="' + (selected && selected.name === m.name ? 'active' : '') + '">' +
+      '<span class="nm">' + esc(m.name) + '</span>' +
       elChip(m.element) +
       '<span class="pw">team <b>' + fmt(m.team) + '</b> · card <b>' + fmt(m.card) + '</b></span>' +
     '</li>').join('');
@@ -929,6 +929,11 @@ function loadStored() {
       ROSTER.defenders = d.defenders;
       ROSTER.attackers = d.attackers;
       ROSTER.updated = d.updated || ROSTER.updated;
+      // Defensive: guard against a `best` field stored as a string (from an
+      // earlier buggy import) so the page never crashes on load.
+      [ROSTER.defenders, ROSTER.attackers].forEach(arr => arr.forEach(m => {
+        if (!Array.isArray(m.best)) m.best = [];
+      }));
       return true;
     }
   } catch (e) {}
@@ -955,6 +960,14 @@ let xlsxLib = null;
 
 const imp = $('importStatus');
 function setImp(msg, kind) { imp.textContent = msg; imp.className = kind || ''; }
+
+// Escape text for safe insertion into innerHTML (names/filters come from
+// imported workbooks and user search input).
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
 
 // Alias map matching data/build_darkmoon_data.py — short/misspelled sheet names -> Full Data first name.
 const ALIAS = {
@@ -1024,9 +1037,10 @@ function parseWorkbook(wb) {
         const team = num(ws['B' + r] && ws['B' + r].v);
         const card = num(ws['C' + r] && ws['C' + r].v);
         const el = cleanEl(ws['D' + r] && ws['D' + r].v);
-        const best = matchBest((ws['H' + r] && ws['H' + r].v) || '') +
-                     matchBest((ws['I' + r] && ws['I' + r].v) || '') +
-                     matchBest((ws['J' + r] && ws['J' + r].v) || '');
+        const best = [].concat(
+                     matchBest((ws['H' + r] && ws['H' + r].v) || ''),
+                     matchBest((ws['I' + r] && ws['I' + r].v) || ''),
+                     matchBest((ws['J' + r] && ws['J' + r].v) || ''));
         if (!nm || (!team && !card && !best.length)) continue;
         defs.push({ name: String(nm).trim(), team, card, element: el, best, skills: (ws['K' + r] && ws['K' + r].v) || '', flags: notesFlags(ws['K' + r] && ws['K' + r].v) });
       }
@@ -1040,9 +1054,10 @@ function parseWorkbook(wb) {
         const team = num(ws['B' + r] && ws['B' + r].v);
         const card = num(ws['C' + r] && ws['C' + r].v);
         const el = cleanEl(ws['D' + r] && ws['D' + r].v);
-        const best = matchBest((ws['E' + r] && ws['E' + r].v) || '') +
-                     matchBest((ws['F' + r] && ws['F' + r].v) || '') +
-                     matchBest((ws['G' + r] && ws['G' + r].v) || '');
+        const best = [].concat(
+                     matchBest((ws['E' + r] && ws['E' + r].v) || ''),
+                     matchBest((ws['F' + r] && ws['F' + r].v) || ''),
+                     matchBest((ws['G' + r] && ws['G' + r].v) || ''));
         if (!team && !card && !best.length) continue;
         atts.push({ name: String(nm).trim(), team, card, element: el, best, skills: '', flags: [] });
       }
@@ -1092,7 +1107,7 @@ const matchDefSel = $('matchDefSel');
 function populateMatchDefSel() {
   const cur = defSel ? defSel.name : '';
   const html = ROSTER.defenders.map(d =>
-    '<option value="' + d.name.replace(/"/g, '&quot;') + '"' + (d.name === cur ? ' selected' : '') + '>' + d.name + '</option>'
+    '<option value="' + esc(d.name) + '"' + (d.name === cur ? ' selected' : '') + '>' + esc(d.name) + '</option>'
   ).join('');
   if (matchDefSel.innerHTML !== html) matchDefSel.innerHTML = html;
 }
@@ -1138,9 +1153,9 @@ function renderMatchups() {
     if (res.mult !== 1) why.push('<b>×' + res.mult.toFixed(1) + ' element</b>');
     if (res.adjust && res.adjust.reasons.length) why.push(res.adjust.reasons.join(' · '));
     const used = planUsage[a.name] || 0;
-    return '<div class="match-row' + (i === 0 && t.adjKos !== null ? ' best' : '') + (used >= 2 ? ' full' : '') + '" data-att="' + a.name.replace(/"/g, '&quot;') + '" title="Load ' + a.name + ' into the VS calculator">' +
+    return '<div class="match-row' + (i === 0 && t.adjKos !== null ? ' best' : '') + (used >= 2 ? ' full' : '') + '" data-att="' + esc(a.name) + '" title="Load ' + esc(a.name) + ' into the VS calculator">' +
       '<div class="top"><span class="rank">' + (i + 1) + '</span>' +
-      '<span class="who"><span class="nm">' + a.name + '</span>' + (used ? '<span class="att-uses uses-' + (used >= 2 ? 2 : 1) + '">' + used + '/2</span>' : '') + elChip(a.element) + '<span class="pw">team ' + fmt(a.team) + ' · card ' + fmt(a.card) + '</span></span></div>' +
+      '<span class="who"><span class="nm">' + esc(a.name) + '</span>' + (used ? '<span class="att-uses uses-' + (used >= 2 ? 2 : 1) + '">' + used + '/2</span>' : '') + elChip(a.element) + '<span class="pw">team ' + fmt(a.team) + ' · card ' + fmt(a.card) + '</span></span></div>' +
       '<div class="stats">' +
         '<div class="stat' + (win ? ' win' : ' deb') + '"><div class="l">Debuff</div><div class="v">' + debTxt + '</div></div>' +
         '<div class="stat kos"><div class="l">KOs</div><div class="v">' + kos + '</div></div>' +
@@ -1212,16 +1227,16 @@ function renderBattlePlan() {
   const full = Object.keys(planUsage).filter(n => planUsage[n] >= 2).length;
   $('planSummary').innerHTML = '<b>' + plan.length + '</b> stations assigned · <b>' + used + '</b> teams used · <b>' + full + '</b> at 2/2';
   grid.innerHTML = plan.map(p => {
-    if (!p.att) return '<div class="plan-row"><div class="pr-top"><span class="pr-def">🛡 ' + p.def.name + '</span></div><div class="pr-stat">No available Frostheim team left</div></div>';
+    if (!p.att) return '<div class="plan-row"><div class="pr-top"><span class="pr-def">🛡 ' + esc(p.def.name) + '</span></div><div class="pr-stat">No available Frostheim team left</div></div>';
     const t = p.res.team;
     const deb = t.ratio === null ? '—' : (t.ratio * 100).toFixed(0) + '%';
     const kos = t.adjKos === null ? (t.kos === null ? '—' : fmt(t.kos)) : fmt(t.adjKos);
     const fod = t.adjFodder === null ? (t.fodder === null ? '—' : fmt(t.adjFodder)) : fmt(t.adjFodder);
     const uses = planUsage[p.att.name] || 0;
     return '<div class="plan-row"><div class="pr-top">' +
-      '<span class="pr-def">🛡 ' + p.def.name + '</span>' + elChip(p.def.element) +
+      '<span class="pr-def">🛡 ' + esc(p.def.name) + '</span>' + elChip(p.def.element) +
       '<span class="pr-arrow">→</span>' +
-      '<span class="pr-att">⚔️ ' + p.att.name + '</span>' + elChip(p.att.element) +
+      '<span class="pr-att">⚔️ ' + esc(p.att.name) + '</span>' + elChip(p.att.element) +
       '<span class="pr-uses uses-' + (uses >= 2 ? 2 : 1) + '">' + uses + '/2</span></div>' +
       '<div class="pr-stats">' +
       '<span class="pr-stat">Debuff <b>' + deb + '</b></span>' +
