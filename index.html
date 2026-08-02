@@ -127,7 +127,7 @@
   .char-card .who { flex: 1 1 170px; min-width: 0; }
   .char-card .rating { flex: 0 0 auto; }
   .char-card .flags { flex: 0 0 auto; }
-  .char-card .spd-wrap, .char-card .variant-row { flex: 1 1 100%; }
+  .char-card .spd-wrap { flex: 1 1 100%; }
   .char-card .skill-list { flex: 1 1 100%; }
   .char-card .who .fullname { font-size: 10px; font-weight: 800; color: #58a6ff; text-transform: uppercase; letter-spacing: .08em; display: block; margin-bottom: 1px; }
   .char-card .who b { font-size: 13px; color: #e6edf3; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -150,11 +150,7 @@
   .rt.atkS { color: #3fb950; background: rgba(63,185,80,.13); border: 1px solid rgba(63,185,80,.4); }
   .rt.tu { color: #c9d1d9; background: rgba(139,148,158,.1); border: 1px solid rgba(139,148,158,.28); font-family: ui-monospace, Consolas, monospace; }
   .char-card .nomatch { font-size: 11.5px; color: #6e7681; font-style: italic; }
-  .variant-sel { font: inherit; font-size: 10.5px; color: #c9d1d9; background: #0d1117; border: 1px solid #30363d; border-radius: 7px; padding: 3px 6px; max-width: 100%; cursor: pointer; }
-  .variant-sel:hover { border-color: #58a6ff; }
   .char-card .spd-wrap { margin-top: 2px; }
-  .char-card .variant-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
-  .variant-row .vlabel { font-size: 10px; color: #6e7681; text-transform: uppercase; letter-spacing: .05em; }
   /* Special-skill flag chips */
   .flags { display: flex; gap: 5px; flex-wrap: wrap; }
   .flag { font-size: 10.5px; font-weight: 800; border-radius: 6px; padding: 2px 7px; letter-spacing: .02em; }
@@ -513,7 +509,7 @@ function bestTierRank(member) {
 // A member's flags = the sheet's own notes (member.skills) + the MAIN card's
 // flags only. Secondary best-cards don't attribute their skills to the member
 // (e.g. Scarlet's 2nd card Towa has 6x — Scarlet herself does not).
-// Computed from the live main card so the variant picker updates it too.
+// Computed from the live main card.
 function memberFlags(member) {
   const set = new Set(notesFlags(member.skills || ''));
   const main = member.best && member.best[0] && member.best[0].matched;
@@ -652,7 +648,7 @@ function renderCharCards(container, member, opponent) {
       '<div class="char-card"><span class="nomatch">No best cards listed in the sheet</span></div>';
     return;
   }
-  const html = best.map((b, bi) => {
+  const html = best.map(b => {
     const m = b.matched;
     if (!m) {
       return '<div class="char-card"><div class="who"><b>' + b.first + '</b>' +
@@ -667,23 +663,12 @@ function renderCharCards(container, member, opponent) {
       ? '<span class="fullname">' + m.full + '</span>'
       : '';
     const spd = tu !== null && oppTU !== null ? '<div class="spd-wrap">' + speedChip(tu, oppTU) + '</div>' : '';
-    // Variant picker — many characters have several cards; let the user pick the
-    // exact one they own (recomputes flags / skills / speed / image live).
-    let variant = '';
-    if (m.variants && m.variants.length > 1) {
-      const opts = m.variants.map(v =>
-        '<option value="' + v.card + '"' + (v.card === m.card ? ' selected' : '') + '>' + v.card + '</option>'
-      ).join('');
-      variant = '<div class="variant-row"><span class="vlabel">Card variant</span>' +
-        '<select class="variant-sel" data-side="' + container.dataset.side + '" data-member="' + member.name + '" data-bidx="' + bi + '">' + opts + '</select></div>';
-    }
     return '<div class="char-card">' + img +
       '<div class="who">' + identity + '<b>' + m.card + '</b>' +
       '<span>' + b.raw + '</span>' + (b.power ? '<span class="pw pw-big" title="Total power ' + fmt(b.power) + '">' + fmtShort(b.power) + ' power</span>' : '') + '</div>' +
       '<div class="rating">' + rtTier(m.tier) + rtAtk(m.atk) + rtTu(m.speed) + '</div>' +
       '<div class="flags">' + flagChips(m.flags) + '</div>' +
       spd +
-      variant +
       skillsHtml(m.skills) +
       '</div>';
   }).join('');
@@ -903,21 +888,7 @@ document.addEventListener('click', e => {
   renderAll();
 });
 
-// Card-variant picker: swap a matched card for another of the same character,
-// then recompute flags / skills / speed / KO adjustment live.
-document.addEventListener('change', e => {
-  const sel = e.target.closest('.variant-sel');
-  if (!sel) return;
-  const side = sel.dataset.side;
-  const member = (side === 'def' ? ROSTER.defenders : ROSTER.attackers).find(m => m.name === sel.dataset.member);
-  const bi = Number(sel.dataset.bidx);
-  const entry = member && member.best && member.best[bi];
-  const v = entry && entry.matched && (entry.matched.variants || []).find(v => v.card === sel.value);
-  if (!v) return;
-  entry.matched = v;
-  if (side === 'def') defSel = member; else attSel = member;
-  renderAll();
-});
+
 
 $('shareBtn').addEventListener('click', async () => {
   const url = location.href;
