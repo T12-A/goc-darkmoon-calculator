@@ -749,7 +749,7 @@ function renderCharCards(container, member, opponent) {
       '</div>';
   }).join('');
   container.innerHTML =
-    '<button type="button" class="cards-toggle" aria-expanded="true" onclick="toggleCards(this)">' +
+    '<button type="button" class="cards-toggle" aria-expanded="false" onclick="toggleCards(this)">' +
       '<span class="chev">▼</span> Identified cards (' + best.length + ')</button>' +
     '<div class="cards-sub"><b>A/B/C/D</b> = Case Tier (A best) · <b>P/S</b> = ATK grade · <b>TU</b> = Time Units ⌊(1000−Speed)÷10⌋ — lower TU acts first</div>' +
     '<div class="cards-body">' + html + '</div>';
@@ -787,7 +787,7 @@ function renderSummary(el, m, labelTeam, labelCard, opponent) {
     '<div class="stat"><div class="lbl">' + labelCard + '</div><div class="val">' + fmt(m.card) + '</div></div>' +
     flagsRow;
   const cards = document.createElement('div');
-  cards.className = 'char-cards';
+  cards.className = 'char-cards collapsed';
   cards.dataset.side = el.id === 'defSummary' ? 'def' : 'att';
   el.appendChild(cards);
   renderCharCards(cards, m, opponent);
