@@ -313,9 +313,77 @@
   footer a:hover { text-decoration: underline; }
 
   @media (max-width: 860px) {
+    .wrap { padding: 24px 16px 80px; }
+    header { flex-direction: column; align-items: stretch; gap: 12px; }
+    h1 { font-size: 24px; }
+    .toolbar { justify-content: stretch; }
+    .toolbar button { flex: 1 1 auto; }
     .matchup { grid-template-columns: 1fr; }
     .vs { flex-direction: row; }
     .results { grid-template-columns: 1fr; }
+    .matchup-bar select { min-width: 0; width: 100%; }
+    .matchup-bar .hint { min-width: 0; flex-basis: 100%; }
+    .def-chip { white-space: normal; }
+    .plan-grid { grid-template-columns: 1fr; }
+    .matchup-grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+    .here-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+    .ko-frame { height: 72vh; }
+  }
+
+  /* Mobile-first polish: big tap targets, no iOS zoom-on-focus, stacked layout */
+  @media (max-width: 640px) {
+    body { -webkit-tap-highlight-color: transparent; }
+    button, .roster li, .match-row, .tab-btn, .here-check, .sort-btn { touch-action: manipulation; }
+
+    .tabs {
+      position: sticky; top: 8px; z-index: 30;
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px;
+      margin: 0 0 16px; padding: 10px;
+      background: rgba(10,7,16,.94); backdrop-filter: blur(10px);
+      border: 1px solid #21262d; border-radius: 14px;
+    }
+    .tab-btn { padding: 10px 2px; font-size: 11px; border-radius: 9px; white-space: normal; line-height: 1.2; }
+
+    select, input[type=search] { font-size: 16px; padding: 12px; }
+    button { padding: 12px 14px; }
+
+    .match-sort { width: 100%; display: flex; }
+    .match-sort .sort-btn { flex: 1; text-align: center; }
+
+    .legend-strip { padding: 10px 12px; font-size: 11.5px; }
+    .member-card { padding: 14px; }
+    .member-summary { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .roster { max-height: none; }
+    .roster li { padding: 12px; }
+    .roster li .pw { font-size: 11px; }
+
+    .result-card { padding: 16px; }
+    .result-card .big .pct { font-size: 34px; }
+    .result-tiles { gap: 8px; }
+    .tile { padding: 12px; }
+    .tile .num { font-size: 22px; }
+
+    .char-card .thumb { width: 40px; height: 40px; }
+    .char-card .who { flex: 1 1 100%; }
+    .char-card .rating, .char-card .flags { flex: 0 0 auto; }
+
+    .here-check { padding: 8px 6px; }
+    .elem-row { padding: 12px 14px; }
+    .match-row { padding: 12px; }
+    .match-row .stats { gap: 6px; }
+    .match-row .stat { padding: 6px 4px; }
+    .match-row .stat .v { font-size: 13px; }
+    .ref-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+    .drop { padding: 18px; }
+    details.ref summary, details.legend summary { padding: 12px 14px; font-size: 13px; }
+    footer { font-size: 11px; }
+  }
+
+  @media (max-width: 380px) {
+    .result-card .big .pct { font-size: 28px; }
+    .tile .num { font-size: 19px; }
+    .tab-btn { font-size: 10px; }
+    .tabs { padding: 8px; gap: 4px; }
   }
 </style>
 </head>
