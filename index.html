@@ -181,6 +181,10 @@
   .matchup-bar .lbl { font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: #8b949e; }
   .matchup-bar select { min-width: 220px; }
   .matchup-bar .hint { flex: 1; min-width: 220px; color: #8b949e; font-size: 12.5px; line-height: 1.5; }
+  .match-sort { display: inline-flex; gap: 2px; background: #161b22; border: 1px solid #30363d; border-radius: 9px; padding: 3px; }
+  .match-sort .sort-btn { font: inherit; font-size: 12px; font-weight: 700; border: 0; border-radius: 7px; padding: 6px 12px; cursor: pointer; background: transparent; color: #8b949e; transition: all .15s; white-space: nowrap; }
+  .match-sort .sort-btn:hover { color: #c9d1d9; }
+  .match-sort .sort-btn.active { background: rgba(188,126,255,.16); color: #bc7eff; }
   .def-chip { display: inline-flex; align-items: center; gap: 8px; background: #161b22; border: 1px solid #30363d; border-radius: 9px; padding: 7px 12px; font-size: 12.5px; color: #c9d1d9; white-space: nowrap; }
   .def-chip b { color: #fff; font-weight: 700; }
   .def-chip .pw { font-family: ui-monospace, Consolas, monospace; color: #d29922; font-weight: 700; }
@@ -227,8 +231,8 @@
   .plan-row .pr-stat b { color: #c9d1d9; }
   .plan-row .pr-uses { margin-left: auto; font-size: 10px; font-weight: 800; border-radius: 999px; padding: 2px 9px; }
   .uses-1 { color: #7cc2ff; background: rgba(74,168,255,.12); border: 1px solid rgba(74,168,255,.35); }
-  .uses-2 { color: #f85149; background: rgba(248,81,73,.12); border: 1px solid rgba(248,81,73,.35); }
   .match-row .att-uses { margin-left: 6px; font-size: 9.5px; font-weight: 800; border-radius: 999px; padding: 1px 7px; vertical-align: 1px; }
+  .uses-pm { color: #d29922; background: rgba(210,153,34,.14); border: 1px solid rgba(210,153,34,.4); }
   .match-row.full { opacity: .5; }
 
   /* KO adjustment note */
@@ -440,7 +444,11 @@
         <span class="lbl">🛡 Defender</span>
         <select id="matchDefSel" title="Choose the Darkmoon defender you want to beat"></select>
         <span class="def-chip" id="matchDefPower" title="The Darkmoon defender's total team power you need to out-damage"></span>
-        <span class="hint">Every Frostheim attacker is ranked against this defender by <b>KOs needed</b> (fewest = best). 🏆 marks the best counter. Click any card to load it into the VS calculator.</span>
+        <div class="match-sort" role="group" title="How to rank the Frostheim attackers against this defender">
+          <button type="button" class="sort-btn active" data-sort="power">⚡ Power match</button>
+          <button type="button" class="sort-btn" data-sort="best">🏆 Best KO</button>
+        </div>
+        <span class="hint"><b>⚡ Power match</b> ranks the attacker closest in team power to this defender first — similar-power teams face each other, saving your top squads. <b>🏆 Best KO</b> shows the fewest-KO counters first. Click any card to load it into the VS calculator.</span>
       </div>
       <div class="matchup-grid" id="matchupGrid"></div>
 
@@ -450,7 +458,7 @@
           <button type="button" class="plan-btn" onclick="renderBattlePlan()">🔄 Rebuild plan</button>
           <span class="plan-summary" id="planSummary"></span>
         </div>
-        <p class="plan-hint">Each Frostheim team can only be used <b>twice</b> across all Darkmoon stations. This plan spreads assignments across <b>every member</b> — the <b>strongest available</b> team is power-matched to the toughest station (fewest KOs needed), each team capped at <b>2 uses</b>. Teams shown at 2/2 are fully committed and get greyed out in the ranked list above.</p>
+        <p class="plan-hint">Each Frostheim team can only be used <b>once</b> across all Darkmoon stations. This plan <b>power-matches</b> — the <b>strongest</b> Frostheim team faces the <b>toughest</b> station and the <b>weakest</b> faces the <b>easiest</b>, so similar-power teams meet and your top squads are saved for the hard fights. Teams marked <b>1/1</b> are committed and get greyed out in the ranked list above.</p>
         <div class="plan-grid" id="planGrid"></div>
       </div>
     </section>
@@ -1111,7 +1119,9 @@ function populateMatchDefSel() {
   ).join('');
   if (matchDefSel.innerHTML !== html) matchDefSel.innerHTML = html;
 }
-// Rank every Frostheim attacker against one defender — fewest adjusted KOs first.
+// Rank every Frostheim attacker against one defender — fewest adjusted KOs first
+// (used for 🏆 Best KO mode; ⚡ Power match mode re-sorts by power proximity).
+let matchSort = 'power';
 function rankMatchups(defender) {
   const rows = ROSTER.attackers.map(a => ({ a, res: compute(a, defender) }));
   rows.sort((x, y) => {
@@ -1141,8 +1151,28 @@ function renderMatchups() {
   const def = defSel || ROSTER.defenders[0];
   if (!def) { grid.innerHTML = '<div class="match-empty">No Darkmoon defenders loaded.</div>'; return; }
   renderMatchDefPower();
-  const rows = rankMatchups(def);
+  let rows = rankMatchups(def);
   if (!rows.length) { grid.innerHTML = '<div class="match-empty">No Frostheim attackers loaded.</div>'; return; }
+  // ⚡ Power match mode — put the attacker closest in team power to the defender first
+  // so similar-power teams face each other (tie-break by fewer KOs).
+  if (matchSort === 'power') {
+    const dPow = def.team || 0;
+    rows.sort((x, y) => {
+      const dx = Math.abs((x.a.team || 0) - dPow);
+      const dy = Math.abs((y.a.team || 0) - dPow);
+      if (dx !== dy) return dx - dy;
+      const kx = x.res.team.adjKos === null ? Infinity : x.res.team.adjKos;
+      const ky = y.res.team.adjKos === null ? Infinity : y.res.team.adjKos;
+      return kx - ky;
+    });
+  }
+  // Which ranked attacker's team power is closest to the defender's (⚡ power match)?
+  const dPow = def.team || 0;
+  let pmIdx = 0, pmDist = Infinity;
+  rows.forEach((r, j) => {
+    const d = Math.abs((r.a.team || 0) - dPow);
+    if (d < pmDist) { pmDist = d; pmIdx = j; }
+  });
   grid.innerHTML = rows.map((row, i) => {
     const a = row.a, res = row.res, t = res.team;
     const win = t.ratio !== null && t.ratio <= 0;
@@ -1153,9 +1183,9 @@ function renderMatchups() {
     if (res.mult !== 1) why.push('<b>×' + res.mult.toFixed(1) + ' element</b>');
     if (res.adjust && res.adjust.reasons.length) why.push(res.adjust.reasons.join(' · '));
     const used = planUsage[a.name] || 0;
-    return '<div class="match-row' + (i === 0 && t.adjKos !== null ? ' best' : '') + (used >= 2 ? ' full' : '') + '" data-att="' + esc(a.name) + '" title="Load ' + esc(a.name) + ' into the VS calculator">' +
+    return '<div class="match-row' + (matchSort === 'best' && i === 0 && t.adjKos !== null ? ' best' : '') + (used >= 1 ? ' full' : '') + '" data-att="' + esc(a.name) + '" title="Load ' + esc(a.name) + ' into the VS calculator">' +
       '<div class="top"><span class="rank">' + (i + 1) + '</span>' +
-      '<span class="who"><span class="nm">' + esc(a.name) + '</span>' + (used ? '<span class="att-uses uses-' + (used >= 2 ? 2 : 1) + '">' + used + '/2</span>' : '') + elChip(a.element) + '<span class="pw">team ' + fmt(a.team) + ' · card ' + fmt(a.card) + '</span></span></div>' +
+      '<span class="who"><span class="nm">' + esc(a.name) + '</span>' + (used ? '<span class="att-uses uses-1">1/1</span>' : '') + (i === pmIdx ? '<span class="att-uses uses-pm">⚡ power match</span>' : '') + elChip(a.element) + '<span class="pw">team ' + fmt(a.team) + ' · card ' + fmt(a.card) + '</span></span></div>' +
       '<div class="stats">' +
         '<div class="stat' + (win ? ' win' : ' deb') + '"><div class="l">Debuff</div><div class="v">' + debTxt + '</div></div>' +
         '<div class="stat kos"><div class="l">KOs</div><div class="v">' + kos + '</div></div>' +
@@ -1166,56 +1196,47 @@ function renderMatchups() {
   }).join('');
 }
 
-// Battle plan — assign every Darkmoon station a Frostheim attacker, each team
-// capped at 2 uses, spreading across ALL members (everyone gets a station).
-// Pass 1 gives each member its best station (strongest available power-matched to
-// the toughest stations first); pass 2 fills leftovers with second uses.
-let planUsage = {}; // attacker name -> uses in the current plan
+// Battle plan — power-match: every Darkmoon station gets one Frostheim team and
+// each team is used ONCE. For each station (hardest first) we pick the unused
+// team whose power is CLOSEST to the defender's, so similar-power teams face
+// each other and top members aren't wasted on easy stations.
+let planUsage = {}; // attacker name -> uses in the current plan (0 or 1)
 
-function bestAttackerFor(cands) {
+// Pick the unused attacker whose team power is closest to the defender's
+// (power match), tie-broken by fewest adjusted KOs, then element advantage.
+function powerMatchFor(cands, def) {
   if (!cands.length) return null;
+  const dPow = def.team || 0;
   cands.sort((x, y) => {
-    const kx = x.res.team.adjKos === null ? (x.res.team.kos === null ? Infinity : x.res.team.kos) : x.res.team.adjKos;
-    const ky = y.res.team.adjKos === null ? (y.res.team.kos === null ? Infinity : y.res.team.kos) : y.res.team.adjKos;
+    const dx = Math.abs((x.a.team || 0) - dPow);
+    const dy = Math.abs((y.a.team || 0) - dPow);
+    if (dx !== dy) return dx - dy;
+    const kx = x.res.team.adjKos === null ? Infinity : x.res.team.adjKos;
+    const ky = y.res.team.adjKos === null ? Infinity : y.res.team.adjKos;
     if (kx !== ky) return kx - ky;
-    const cx = x.res.card.adjKos === null ? (x.res.card.kos === null ? Infinity : x.res.card.kos) : x.res.card.adjKos;
-    const cy = y.res.card.adjKos === null ? (y.res.card.kos === null ? Infinity : y.res.card.kos) : y.res.card.adjKos;
-    if (cx !== cy) return cx - cy;
-    return (y.a.team || 0) - (x.a.team || 0);
+    return (y.res.mult || 0) - (x.res.mult || 0);
   });
   return cands[0];
 }
 
 function buildBattlePlan() {
-  const usage = {};
   const defs = [...ROSTER.defenders].sort((a, b) => (b.team || 0) - (a.team || 0));
   const plan = [];
-  const taken = {};
-  // Pass 1 — every member gets one station: hardest stations first, each taking
-  // the best attacker that hasn't been used yet.
+  const used = {};
   for (const def of defs) {
-    if (Object.keys(usage).length >= ROSTER.attackers.length) break;
+    if (Object.keys(used).length >= ROSTER.attackers.length) {
+      plan.push({ def, att: null, res: null });
+      continue;
+    }
     const cands = ROSTER.attackers
-      .filter(a => !(usage[a.name]))
+      .filter(a => !used[a.name])
       .map(a => ({ a, res: compute(a, def) }));
-    const pick = bestAttackerFor(cands);
-    if (!pick) break;
-    taken[def.name] = true;
-    usage[pick.a.name] = 1;
-    plan.push({ def, att: pick.a, res: pick.res });
-  }
-  // Pass 2 — leftover stations get a second use from the best remaining performer.
-  for (const def of defs) {
-    if (taken[def.name]) continue;
-    const cands = ROSTER.attackers
-      .filter(a => (usage[a.name] || 0) < 2)
-      .map(a => ({ a, res: compute(a, def) }));
-    const pick = bestAttackerFor(cands);
+    const pick = powerMatchFor(cands, def);
     if (!pick) { plan.push({ def, att: null, res: null }); continue; }
-    usage[pick.a.name] = (usage[pick.a.name] || 0) + 1;
+    used[pick.a.name] = 1;
     plan.push({ def, att: pick.a, res: pick.res });
   }
-  planUsage = usage;
+  planUsage = used;
   return plan;
 }
 
@@ -1224,8 +1245,7 @@ function renderBattlePlan() {
   if (!grid) return;
   const plan = buildBattlePlan();
   const used = Object.keys(planUsage).filter(n => planUsage[n] > 0).length;
-  const full = Object.keys(planUsage).filter(n => planUsage[n] >= 2).length;
-  $('planSummary').innerHTML = '<b>' + plan.length + '</b> stations assigned · <b>' + used + '</b> teams used · <b>' + full + '</b> at 2/2';
+  $('planSummary').innerHTML = '<b>' + plan.length + '</b> stations assigned · <b>' + used + '</b> teams used · <b>' + (ROSTER.attackers.length - used) + '</b> still available';
   grid.innerHTML = plan.map(p => {
     if (!p.att) return '<div class="plan-row"><div class="pr-top"><span class="pr-def">🛡 ' + esc(p.def.name) + '</span></div><div class="pr-stat">No available Frostheim team left</div></div>';
     const t = p.res.team;
@@ -1237,7 +1257,7 @@ function renderBattlePlan() {
       '<span class="pr-def">🛡 ' + esc(p.def.name) + '</span>' + elChip(p.def.element) +
       '<span class="pr-arrow">→</span>' +
       '<span class="pr-att">⚔️ ' + esc(p.att.name) + '</span>' + elChip(p.att.element) +
-      '<span class="pr-uses uses-' + (uses >= 2 ? 2 : 1) + '">' + uses + '/2</span></div>' +
+      (uses >= 1 ? '<span class="pr-uses uses-1">1/1</span>' : '') + '</div>' +
       '<div class="pr-stats">' +
       '<span class="pr-stat">Debuff <b>' + deb + '</b></span>' +
       '<span class="pr-stat">KOs <b>' + kos + '</b></span>' +
@@ -1250,6 +1270,16 @@ function renderBattlePlan() {
 matchDefSel.addEventListener('change', () => {
   const d = ROSTER.defenders.find(m => m.name === matchDefSel.value);
   if (d) { defSel = d; renderAll(); }
+});
+// ⚡ Power match / 🏆 Best KO sort toggle for the matchup finder.
+document.querySelectorAll('.match-sort .sort-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.classList.contains('active')) return;
+    document.querySelectorAll('.match-sort .sort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    matchSort = btn.dataset.sort;
+    renderMatchups();
+  });
 });
 // Clicking a matchup card loads it into the VS calculator.
 document.addEventListener('click', e => {
