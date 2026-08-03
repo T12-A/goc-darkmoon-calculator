@@ -713,6 +713,10 @@
 
     <aside class="card here-card">
       <p class="card-title">📋 Who's here — deployment tracker</p>
+      <div class="here-meta">
+        <span class="here-summary" id="hereSummary2"></span>
+        <button id="hereReset2" class="ghost" title="Clear all deployment marks">Reset marks</button>
+      </div>
       <div class="here-side">
         <div class="here-side-lbl">🛡 Darkmoon defenders</div>
         <div class="here-grid" id="hereGridDef2"></div>
@@ -1126,8 +1130,8 @@ function renderHere() {
     if (g) g.innerHTML = hereCellsFor(pair[1]);
   });
   const c = hereCounts();
-  const el = $('hereSummary');
-  if (el) el.innerHTML = '<b>' + c.here + '</b> / ' + (ROSTER.defenders.length + ROSTER.attackers.length) + ' members here · <b>' + c.deployed + '</b> / ' + c.total + ' teams deployed';
+  const html = '<b>' + c.here + '</b> / ' + (ROSTER.defenders.length + ROSTER.attackers.length) + ' members here · <b>' + c.deployed + '</b> / ' + c.total + ' teams deployed';
+  ['hereSummary', 'hereSummary2'].forEach(id => { const el = $(id); if (el) el.innerHTML = html; });
 }
 // Refresh the here panels + both roster lists after a toggle (the checkboxes are
 // hidden, so rebuilding keeps every surface — rosters, panels, orig mode — in sync).
@@ -1146,11 +1150,15 @@ document.addEventListener('change', e => {
   saveHere();
   refreshHereUI();
 });
-$('hereReset').addEventListener('click', () => {
-  if (!confirm('Clear all “who’s here” marks for both Darkmoon and Frostheim?')) return;
-  hereState = {};
-  saveHere();
-  refreshHereUI();
+['hereReset', 'hereReset2'].forEach(id => {
+  const btn = $(id);
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    if (!confirm('Clear all “who’s here” marks for both Darkmoon and Frostheim?')) return;
+    hereState = {};
+    saveHere();
+    refreshHereUI();
+  });
 });
 
 function renderAll() {
@@ -1679,9 +1687,9 @@ function cstSec() {
   const d = new Date(Date.now() - CST_OFFSET_H * 3600000);
   return d.getUTCHours() * 3600 + d.getUTCMinutes() * 60 + d.getUTCSeconds();
 }
-function fmtMMSS(t) {
-  const s = Math.max(0, Math.floor(t));
-  return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+function fmtClock(sec) {
+  sec = Math.max(0, Math.round(sec));
+  return String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0');
 }
 function updateGocTimer() {
   const box = $('gocTimer'), t = $('gtTime'), s = $('gtSub');
@@ -1690,11 +1698,11 @@ function updateGocTimer() {
   box.classList.remove('upcoming', 'running', 'ended');
   if (now < start) {
     box.classList.add('upcoming');
-    t.textContent = fmtMMSS(start - now);
+    t.textContent = fmtClock(start - now);
     s.textContent = 'starts 9:00 PM CST';
   } else if (now <= end) {
     box.classList.add('running');
-    t.textContent = fmtMMSS(end - now);
+    t.textContent = fmtClock(end - now);
     s.textContent = 'until 9:45 PM CST';
   } else {
     box.classList.add('ended');
@@ -1706,10 +1714,6 @@ function updateGocTimer() {
 /* ============================== GOC TIME CALCULATOR ============================== */
 // Castle 2s/team · Dorms 2.5s/team · Towns 4s/team — 200 teams = 06:40 / 08:20 / 13:20.
 const TIME_RATES = { tcCastle: 2, tcDorms: 2.5, tcTowns: 4 };
-function fmtClock(sec) {
-  sec = Math.max(0, Math.round(sec));
-  return String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0');
-}
 function renderTimeCalc() {
   Object.keys(TIME_RATES).forEach(id => {
     const n = Math.max(0, Math.round(Number($(id).value) || 0));
