@@ -312,7 +312,89 @@
   footer a { color: #58a6ff; text-decoration: none; }
   footer a:hover { text-decoration: underline; }
 
+  /* Mode switch — Player Info vs Original Sheet */
+  .mode-switch { display: flex; gap: 8px; margin: 0 0 14px; background: rgba(22,27,34,.55); border: 1px solid #21262d; border-radius: 14px; padding: 6px; width: fit-content; max-width: 100%; flex-wrap: wrap; }
+  .mode-btn { font: inherit; font-weight: 700; font-size: 13px; border-radius: 10px; padding: 10px 18px; cursor: pointer; border: 1px solid transparent; background: transparent; color: #8b949e; transition: all .15s ease; white-space: nowrap; }
+  .mode-btn:hover { color: #c9d1d9; }
+  .mode-btn.active { color: #fff; background: linear-gradient(135deg, rgba(188,126,255,.28), rgba(88,166,255,.18)); border-color: #bc7eff; box-shadow: 0 0 0 1px rgba(188,126,255,.35), 0 4px 18px rgba(188,126,255,.12); }
+  .mode-view { display: none; }
+  .mode-view.active { display: block; animation: fadeIn .25s ease; }
+
+  /* Fixed GOC countdown pill — top right, never scrolls away */
+  .goc-timer { position: fixed; top: 12px; right: 14px; z-index: 60; min-width: 152px; text-align: center;
+    background: rgba(13,17,23,.92); backdrop-filter: blur(10px); border: 1px solid #30363d; border-radius: 14px; padding: 8px 14px 9px;
+    box-shadow: 0 8px 28px rgba(0,0,0,.45); font-family: ui-monospace, Consolas, monospace; }
+  .goc-timer .gt-lbl { font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #8b949e; }
+  .goc-timer .gt-time { font-size: 26px; font-weight: 800; line-height: 1.15; color: #e6edf3; letter-spacing: .03em; }
+  .goc-timer .gt-sub { font-size: 10px; color: #8b949e; margin-top: 1px; }
+  .goc-timer.running { border-color: rgba(63,185,80,.55); box-shadow: 0 0 0 1px rgba(63,185,80,.3), 0 8px 28px rgba(0,0,0,.45); }
+  .goc-timer.running .gt-time { color: #3fb950; }
+  .goc-timer.upcoming { border-color: rgba(210,153,34,.5); }
+  .goc-timer.upcoming .gt-time { color: #d29922; }
+  .goc-timer.ended { opacity: .75; }
+  .goc-timer.ended .gt-time { color: #8b949e; }
+  header { padding-right: 170px; } /* reserve the fixed timer's column at top-right */
+
+  /* VS page — main column + who's-here on the far right */
+  .vs-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
+  .vs-main { min-width: 0; }
+  .vs-wrap .here-card, .orig-grid .here-card { margin-top: 26px; }
+  .vs-wrap .here-grid, .orig-grid .here-grid { grid-template-columns: 1fr; max-height: 230px; }
+  .here-side { margin-bottom: 14px; }
+  .here-side:last-child { margin-bottom: 0; }
+  .here-side-lbl { font-size: 10.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: #8b949e; margin-bottom: 8px; }
+  .here-side-lbl b { color: #c9d1d9; }
+
+  /* Team-used checkmarks right in each roster row */
+  .roster-checks { display: inline-flex; gap: 4px; margin-left: auto; flex-shrink: 0; }
+  .roster-checks .here-check { font-size: 9.5px; padding: 2px 6px; gap: 3px; }
+
+  /* Original-sheet mode (faithful port of the spreadsheet's Debuff Calculator) */
+  .orig-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; margin-top: 26px; }
+  .orig-main { min-width: 0; display: grid; gap: 16px; }
+  .orig-card { padding: 22px; }
+  .orig-pair { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: start; }
+  .orig-side { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .orig-side select { width: 100%; }
+  .orig-rows { display: grid; gap: 6px; }
+  .orig-row { display: flex; align-items: center; gap: 10px; background: #161b22; border: 1px solid #21262d; border-radius: 9px; padding: 8px 12px; min-width: 0; }
+  .orig-row .lbl { flex: 0 0 128px; font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: .05em; }
+  .orig-row .val { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 700; font-family: ui-monospace, Consolas, monospace; color: #e6edf3; text-align: right; }
+  .orig-note { font-size: 11.5px; color: #6e7681; font-style: italic; margin: 12px 0 0; line-height: 1.55; }
+  .orig-note b { color: #8b949e; }
+  .orig-results { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .orig-result { background: #161b22; border: 1px solid #21262d; border-radius: 12px; padding: 14px; text-align: center; }
+  .orig-result .or-lbl { font-size: 10.5px; color: #8b949e; text-transform: uppercase; letter-spacing: .07em; }
+  .orig-result .or-deb { font-size: 26px; font-weight: 800; color: #d29922; font-family: ui-monospace, Consolas, monospace; margin-top: 3px; }
+  .orig-result .or-kos { font-size: 18px; font-weight: 800; color: #ffd479; font-family: ui-monospace, Consolas, monospace; margin-top: 4px; }
+  .orig-result .or-fod { font-size: 12.5px; color: #8b949e; margin-top: 2px; }
+  .orig-sheet { padding: 22px; }
+  .orig-table { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+  .o-cell { background: #161b22; border: 1px solid #21262d; border-radius: 9px; padding: 8px 10px; font-size: 12px; text-align: center; }
+  .o-cell b { display: block; font-size: 13.5px; font-family: ui-monospace, Consolas, monospace; }
+  .o-cell .r { color: #d29922; } .o-cell .k { color: #c9d1d9; } .o-cell .f { color: #58a6ff; }
+
+  /* GOC time calculator — castle / dorms / towns */
+  .time-card { margin-top: 26px; padding: 22px; }
+  .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .time-row { background: #161b22; border: 1px solid #21262d; border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .time-row .t-lbl { font-size: 15px; font-weight: 800; color: #e6edf3; }
+  .time-row .t-in { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #8b949e; }
+  .time-row .t-in input { width: 90px; font-size: 15px; font-family: ui-monospace, Consolas, monospace; font-weight: 700; padding: 7px 10px; border: 1px solid #30363d; border-radius: 9px; background: #0d1117; color: #e6edf3; text-align: center; }
+  .time-row .t-in input:focus { border-color: #bc7eff; outline: none; box-shadow: 0 0 0 3px rgba(188,126,255,.15); }
+  .time-row .t-sec { font-size: 11.5px; color: #6e7681; font-family: ui-monospace, Consolas, monospace; }
+  .time-row .t-out { margin-left: auto; font-size: 26px; font-weight: 800; font-family: ui-monospace, Consolas, monospace; color: #3fb950; letter-spacing: .02em; }
+  .time-note { font-size: 11.5px; color: #6e7681; margin: 12px 0 0; line-height: 1.55; }
+  .time-note b { color: #c9d1d9; }
+  .time-note code { background: #161b22; border: 1px solid #21262d; border-radius: 5px; padding: 1px 6px; font-size: 11px; }
+
   @media (max-width: 860px) {
+    .vs-wrap, .orig-grid { grid-template-columns: 1fr; }
+    .vs-wrap .here-card, .orig-grid .here-card { margin-top: 16px; }
+    .vs-wrap .here-grid, .orig-grid .here-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); max-height: 340px; }
+    .orig-pair { grid-template-columns: 1fr; }
+    .time-grid { grid-template-columns: 1fr; }
+    header { padding-right: 0; }
     .wrap { padding: 24px 16px 80px; }
     header { flex-direction: column; align-items: stretch; gap: 12px; }
     h1 { font-size: 24px; }
@@ -376,6 +458,18 @@
     .ref-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
     .drop { padding: 18px; }
     details.ref summary, details.legend summary { padding: 12px 14px; font-size: 13px; }
+    .mode-switch { width: 100%; }
+    .mode-btn { flex: 1 1 auto; text-align: center; padding: 10px 10px; font-size: 12px; }
+    .goc-timer { top: 8px; right: 8px; min-width: 0; padding: 6px 10px; }
+    .goc-timer .gt-time { font-size: 20px; }
+    .wrap { padding-top: 66px; } /* clear the fixed timer strip */
+    .tabs { top: 58px; } /* stick below the fixed countdown pill */
+    .orig-card, .orig-sheet, .time-card { padding: 16px; }
+    .orig-results { grid-template-columns: 1fr; }
+    .orig-row .lbl { flex-basis: 96px; font-size: 10px; }
+    .time-row { padding: 12px 14px; }
+    .time-row .t-out { margin-left: 0; }
+    .roster-checks .here-check { font-size: 9px; padding: 2px 5px; }
     footer { font-size: 11px; }
   }
 
@@ -384,10 +478,20 @@
     .tile .num { font-size: 19px; }
     .tab-btn { font-size: 10px; }
     .tabs { padding: 8px; gap: 4px; }
+    .mode-btn { font-size: 11px; padding: 10px 6px; }
+    .goc-timer .gt-time { font-size: 18px; }
+    .time-row .t-lbl { flex: 1 1 100%; }
+    .orig-row { flex-wrap: wrap; }
+    .orig-row .lbl { flex-basis: 100%; }
   }
 </style>
 </head>
 <body>
+<div class="goc-timer" id="gocTimer" role="timer" title="GOC battle window: 9:00 PM – 9:45 PM Central (CST)">
+  <div class="gt-lbl">⏱ GOC battle window</div>
+  <div class="gt-time" id="gtTime">45:00</div>
+  <div class="gt-sub" id="gtSub">9:00 → 9:45 PM CST</div>
+</div>
 <div class="bg-glow"></div>
 <div class="wrap">
 
@@ -403,6 +507,12 @@
     </div>
   </header>
 
+  <div class="mode-switch" role="group" aria-label="Calculator mode">
+    <button type="button" class="mode-btn active" data-mode="player">🎮 Player Info Calculator</button>
+    <button type="button" class="mode-btn" data-mode="orig">📊 Original Sheet Calculator</button>
+  </div>
+
+  <div class="mode-view active" id="view-player">
   <nav class="tabs" aria-label="Calculator views">
     <button type="button" class="tab-btn active" data-tab="vs">⚔️ VS Calculator</button>
     <button type="button" class="tab-btn" data-tab="matchup">🎯 Matchup Finder</button>
@@ -410,6 +520,8 @@
   </nav>
 
   <section class="tab-panel active" id="tab-vs">
+  <div class="vs-wrap">
+  <div class="vs-main">
   <section class="card legend-strip" aria-label="Ratings legend">
     <span class="ls-lbl">🏷️ Ratings</span>
     <span class="rt tierA">A</span><span class="rt tierB">B</span><span class="rt tierC">C</span><span class="rt tierD">D</span>
@@ -455,15 +567,6 @@
     </div>
   </section>
 
-  <section class="card here-card">
-    <p class="card-title">📋 Who's here — Frostheim deployment tracker</p>
-    <div class="here-meta">
-      <span class="here-summary" id="hereSummary"></span>
-      <button id="hereReset" class="ghost" title="Clear all deployment marks">Reset marks</button>
-    </div>
-    <div class="here-grid" id="hereGrid"></div>
-  </section>
-
   <details class="card ref">
     <summary>📊 Debuff reference table (debuff % → KOs → fodder)</summary>
     <div class="ref-grid" id="refGrid"></div>
@@ -503,6 +606,24 @@
       element and power. <i>No match</i> entries are cards the sheet didn't name fully enough to identify.
     </div>
   </details>
+  </div><!-- /vs-main -->
+
+  <aside class="card here-card">
+    <p class="card-title">📋 Who's here — deployment tracker</p>
+    <div class="here-meta">
+      <span class="here-summary" id="hereSummary"></span>
+      <button id="hereReset" class="ghost" title="Clear all deployment marks">Reset marks</button>
+    </div>
+    <div class="here-side">
+      <div class="here-side-lbl">🛡 Darkmoon defenders</div>
+      <div class="here-grid" id="hereGridDef"></div>
+    </div>
+    <div class="here-side">
+      <div class="here-side-lbl">⚔️ Frostheim attackers</div>
+      <div class="here-grid" id="hereGrid"></div>
+    </div>
+  </aside>
+  </div><!-- /vs-wrap -->
   </section><!-- /tab-vs -->
 
   <section class="tab-panel" id="tab-matchup">
@@ -536,8 +657,100 @@
     <iframe class="ko-frame" src="ko-calculator.html" title="GOC KO Calculator" loading="lazy"></iframe>
     <p class="ko-note">🗡️ The <b>KO calculator</b> is embedded from this site — it's a faithful web port of the original spreadsheet's <b>KO sheet</b>: type in the <b>opponent's total team power</b> (and optionally their current KOs) and the always-visible table shows every <b>KO range → debuff % → power needed to defeat</b> them, live. Each 6-KO team = 1.25% debuff, capped at 475 KOs. <a href="ko-calculator.html" target="_blank" rel="noopener">Open it full-screen ↗</a></p>
   </section>
+  </div><!-- /view-player -->
+
+  <section class="mode-view" id="view-orig">
+  <div class="orig-grid">
+    <div class="orig-main">
+      <section class="card orig-card">
+        <p class="card-title">📊 Debuff Calculator — identical to your original sheet</p>
+        <div class="orig-pair">
+          <div class="orig-side">
+            <select id="oDefSel" title="Defending member (Darkmoon)"></select>
+            <div class="orig-rows">
+              <div class="orig-row"><span class="lbl">Name</span><span class="val" id="oDefName">—</span><span class="roster-checks" id="oDefChecks"></span></div>
+              <div class="orig-row"><span class="lbl">Team power</span><span class="val" id="oDefTeam">—</span></div>
+              <div class="orig-row"><span class="lbl">Character card power</span><span class="val" id="oDefCard">—</span></div>
+              <div class="orig-row"><span class="lbl">Ratio</span><span class="val" id="oDefRatio">—</span></div>
+              <div class="orig-row"><span class="lbl">Element</span><span class="val" id="oDefEl">—</span></div>
+            </div>
+          </div>
+          <div class="vs"><div class="ring">VS</div></div>
+          <div class="orig-side">
+            <select id="oAttSel" title="Attacking member (Frostheim)"></select>
+            <div class="orig-rows">
+              <div class="orig-row"><span class="lbl">Name</span><span class="val" id="oAttName">—</span><span class="roster-checks" id="oAttChecks"></span></div>
+              <div class="orig-row"><span class="lbl">Team power</span><span class="val" id="oAttTeam">—</span></div>
+              <div class="orig-row"><span class="lbl">Main card power</span><span class="val" id="oAttCard">—</span></div>
+              <div class="orig-row"><span class="lbl">Ratio</span><span class="val" id="oAttRatio">—</span></div>
+              <div class="orig-row"><span class="lbl">Element</span><span class="val" id="oAttEl">—</span></div>
+            </div>
+          </div>
+        </div>
+        <p class="orig-note">* Element advantage has already been calculated into this. The KO amounts may look different than the main calculator when a member's cards carry special skills (<b>life flip / stun / sleep / 6x damage</b>) or tier disadvantages — this original sheet applies none of those adjustments.</p>
+        <div class="orig-results">
+          <div class="orig-result">
+            <div class="or-lbl">Team power</div>
+            <div class="or-deb" id="oResTeamDeb">—</div>
+            <div class="or-kos" id="oResTeamKos">—</div>
+            <div class="or-fod" id="oResTeamFod"></div>
+          </div>
+          <div class="orig-result">
+            <div class="or-lbl">Main card power</div>
+            <div class="or-deb" id="oResCardDeb">—</div>
+            <div class="or-kos" id="oResCardKos">—</div>
+            <div class="or-fod" id="oResCardFod"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card orig-sheet">
+        <p class="card-title">📊 Debuff sheet — every 5% → KOs → fodder (the spreadsheet's table)</p>
+        <div class="orig-table" id="oTable"></div>
+        <p class="orig-note">Each <b>6-KO team</b> = <b>1.25% debuff</b> · KOs = debuff × 480 · fodder = KOs ÷ 6 · KOs capped at <b>475</b> (the game's max). Identical math to your sheet's AC4:AE table.</p>
+      </section>
+    </div>
+
+    <aside class="card here-card">
+      <p class="card-title">📋 Who's here — deployment tracker</p>
+      <div class="here-side">
+        <div class="here-side-lbl">🛡 Darkmoon defenders</div>
+        <div class="here-grid" id="hereGridDef2"></div>
+      </div>
+      <div class="here-side">
+        <div class="here-side-lbl">⚔️ Frostheim attackers</div>
+        <div class="here-grid" id="hereGrid2"></div>
+      </div>
+    </aside>
+  </div><!-- /orig-grid -->
+  </section><!-- /view-orig -->
 
   <input type="file" id="fileInput" accept=".xlsx,.xls" hidden>
+
+  <section class="card time-card">
+    <p class="card-title">⏱ GOC Time Calculator — how long a station's teams last</p>
+    <div class="time-grid">
+      <div class="time-row">
+        <span class="t-lbl">🏰 Castle</span>
+        <label class="t-in"><span>Teams</span><input type="number" id="tcCastle" value="200" min="0" inputmode="numeric"></label>
+        <span class="t-sec" id="tsCastle">400 sec</span>
+        <span class="t-out" id="toCastle">06:40</span>
+      </div>
+      <div class="time-row">
+        <span class="t-lbl">🛏️ Dorms</span>
+        <label class="t-in"><span>Teams</span><input type="number" id="tcDorms" value="200" min="0" inputmode="numeric"></label>
+        <span class="t-sec" id="tsDorms">500 sec</span>
+        <span class="t-out" id="toDorms">08:20</span>
+      </div>
+      <div class="time-row">
+        <span class="t-lbl">🏘️ Towns</span>
+        <label class="t-in"><span>Teams</span><input type="number" id="tcTowns" value="200" min="0" inputmode="numeric"></label>
+        <span class="t-sec" id="tsTowns">800 sec</span>
+        <span class="t-out" id="toTowns">13:20</span>
+      </div>
+    </div>
+    <p class="time-note">Seconds per team — Castle <b>2s</b> · Dorms <b>2.5s</b> · Towns <b>4s</b>. Same as the sheet: <code>=TEXT(seconds/(24*60*60),"mm:ss")</code> · 200 teams = <b>06:40 / 08:20 / 13:20</b>.</p>
+  </section>
 
   <footer>
     Computes <b>debuff = ⌈ max(0, 1 − (attacker power × element multiplier) ÷ defender power) ⌉</b> rounded up to the nearest 5%.<br>
@@ -771,6 +984,9 @@ function renderRoster(el, members, filter, selected, side) {
       '<span class="nm">' + esc(m.name) + '</span>' +
       elChip(m.element) +
       '<span class="pw">team <b>' + fmt(m.team) + '</b> · card <b>' + fmt(m.card) + '</b></span>' +
+      '<span class="roster-checks" title="Which of ' + esc(m.name) + '’s teams have been used">' +
+        hereCheckLabel(m, 0, hereChecked(m.name, 0)) + hereCheckLabel(m, 1, hereChecked(m.name, 1)) +
+      '</span>' +
     '</li>').join('');
 }
 
@@ -858,8 +1074,10 @@ function renderRefTable() {
 }
 
 /* ============================== WHO'S HERE ============================== */
-// Frostheim deployment tracker: two check marks per member (their two teams),
-// persisted locally so guildmates can tick off who has already deployed.
+// Deployment tracker for BOTH sides (Darkmoon defenders + Frostheim attackers):
+// two check marks per member (their two teams), persisted locally so guildmates
+// can tick off who has already deployed. The same marks appear next to each
+// player's name in the rosters and inside the who's-here panels on the right.
 const HERE_KEY = 'goc-darkmoon-here-v1';
 let hereState = loadHere();
 function loadHere() {
@@ -875,32 +1093,50 @@ function hereChecked(name, team) {
   const st = hereState[name];
   return !!(st && st[team]);
 }
-function renderHere() {
-  const grid = $('hereGrid');
-  if (!grid) return;
-  const atts = ROSTER.attackers;
-  grid.innerHTML = atts.map(a => {
+function hereCheckLabel(m, team, on) {
+  return '<label class="here-check' + (on ? ' on' : '') + '"><input type="checkbox" data-name="' + m.name.replace(/"/g, '&quot;') + '" data-team="' + team + '"' + (on ? ' checked' : '') + '>Team ' + (team + 1) + ' ✓</label>';
+}
+function hereCellsFor(list) {
+  return list.map(a => {
     const t1 = hereChecked(a.name, 0), t2 = hereChecked(a.name, 1);
     const done = t1 && t2;
     return '<div class="here-cell' + (done ? ' done' : '') + '">' +
       '<div class="here-top"><span class="nm" title="' + a.name.replace(/"/g, '&quot;') + '">' + a.name + '</span>' + elChip(a.element) + '</div>' +
       '<span class="pw">team ' + fmt(a.team) + ' · card ' + fmt(a.card) + '</span>' +
       '<div class="here-checks">' +
-        '<label class="here-check' + (t1 ? ' on' : '') + '"><input type="checkbox" data-name="' + a.name.replace(/"/g, '&quot;') + '" data-team="0"' + (t1 ? ' checked' : '') + '>Team 1 ✓</label>' +
-        '<label class="here-check' + (t2 ? ' on' : '') + '"><input type="checkbox" data-name="' + a.name.replace(/"/g, '&quot;') + '" data-team="1"' + (t2 ? ' checked' : '') + '>Team 2 ✓</label>' +
+        hereCheckLabel(a, 0, t1) + hereCheckLabel(a, 1, t2) +
       '</div></div>';
   }).join('');
+}
+function hereCounts() {
+  const all = ROSTER.defenders.concat(ROSTER.attackers);
   let here = 0, deployed = 0;
-  atts.forEach(a => {
+  all.forEach(a => {
     const st = hereState[a.name];
     if (st && (st[0] || st[1])) here++;
     if (st && st[0]) deployed++;
     if (st && st[1]) deployed++;
   });
-  $('hereSummary').innerHTML = '<b>' + here + '</b> / ' + atts.length + ' members here · <b>' + deployed + '</b> / ' + atts.length * 2 + ' teams deployed';
+  return { here, deployed, total: all.length * 2 };
 }
-// Targeted update on each toggle — just flip the clicked cell's classes and the
-// summary, instead of rebuilding all 96 labels (keeps focus on the checkbox).
+function renderHere() {
+  [['hereGridDef', ROSTER.defenders], ['hereGrid', ROSTER.attackers],
+   ['hereGridDef2', ROSTER.defenders], ['hereGrid2', ROSTER.attackers]].forEach(pair => {
+    const g = $(pair[0]);
+    if (g) g.innerHTML = hereCellsFor(pair[1]);
+  });
+  const c = hereCounts();
+  const el = $('hereSummary');
+  if (el) el.innerHTML = '<b>' + c.here + '</b> / ' + (ROSTER.defenders.length + ROSTER.attackers.length) + ' members here · <b>' + c.deployed + '</b> / ' + c.total + ' teams deployed';
+}
+// Refresh the here panels + both roster lists after a toggle (the checkboxes are
+// hidden, so rebuilding keeps every surface — rosters, panels, orig mode — in sync).
+function refreshHereUI() {
+  renderHere();
+  renderRoster(defRoster, ROSTER.defenders, defFilter, defSel, 'def');
+  renderRoster(attRoster, ROSTER.attackers, attFilter, attSel, 'att');
+  if (mode === 'orig') renderOrig();
+}
 document.addEventListener('change', e => {
   const cb = e.target.closest('.here-check input');
   if (!cb) return;
@@ -908,25 +1144,13 @@ document.addEventListener('change', e => {
   if (!hereState[name]) hereState[name] = [false, false];
   hereState[name][team] = cb.checked;
   saveHere();
-  const label = cb.closest('.here-check');
-  if (label) label.classList.toggle('on', cb.checked);
-  const cell = cb.closest('.here-cell');
-  if (cell) cell.classList.toggle('done', hereState[name][0] && hereState[name][1]);
-  const atts = ROSTER.attackers;
-  let here = 0, deployed = 0;
-  atts.forEach(a => {
-    const st = hereState[a.name];
-    if (st && (st[0] || st[1])) here++;
-    if (st && st[0]) deployed++;
-    if (st && st[1]) deployed++;
-  });
-  $('hereSummary').innerHTML = '<b>' + here + '</b> / ' + atts.length + ' members here · <b>' + deployed + '</b> / ' + atts.length * 2 + ' teams deployed';
+  refreshHereUI();
 });
 $('hereReset').addEventListener('click', () => {
-  if (!confirm('Clear all “who’s here” marks for Frostheim?')) return;
+  if (!confirm('Clear all “who’s here” marks for both Darkmoon and Frostheim?')) return;
   hereState = {};
   saveHere();
-  renderHere();
+  refreshHereUI();
 });
 
 function renderAll() {
@@ -944,6 +1168,7 @@ function renderAll() {
   renderRefTable();
   renderHere();
   populateMatchDefSel();
+  if (mode === 'orig') renderOrig();
   if ($('tab-matchup') && $('tab-matchup').classList.contains('active')) { renderMatchups(); renderBattlePlan(); }
 }
 
@@ -953,6 +1178,7 @@ attSearch.addEventListener('input', e => { attFilter = e.target.value; renderAll
 document.addEventListener('click', e => {
   const li = e.target.closest('li[data-side]');
   if (!li) return;
+  if (e.target.closest('.here-check')) return; // team-used ticks shouldn't select the row
   const name = li.dataset.name;
   if (li.dataset.side === 'def') {
     defSel = ROSTER.defenders.find(m => m.name === name) || defSel;
@@ -1370,6 +1596,130 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
+/* ============================== MODE SWITCH ============================== */
+// Two options: 🎮 Player Info (rosters, characters, tabs) and
+// 📊 Original Sheet (a faithful port of the spreadsheet's Debuff Calculator).
+let mode = 'player';
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+  const vp = $('view-player'), vo = $('view-orig');
+  if (vp) vp.classList.toggle('active', m === 'player');
+  if (vo) { vo.classList.toggle('active', m === 'orig'); if (m === 'orig') renderOrig(); }
+}
+document.querySelectorAll('.mode-btn').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+/* ============================== ORIGINAL SHEET MODE ============================== */
+// Mirrors the spreadsheet's "Debuff Calculator" block: pick a defending member
+// and an attacking member, read Name / Team power / Character card power /
+// Ratio / Element for each, and the debuff + KOs + fodder needed — pure math,
+// no character-skill adjustments, exactly like the sheet.
+let oDef = null, oAtt = null;
+let oDefPinned = false, oAttPinned = false;
+function populateOrigSels() {
+  const defCur = oDefPinned && oDef ? oDef.name : (defSel ? defSel.name : '');
+  const attCur = oAttPinned && oAtt ? oAtt.name : (attSel ? attSel.name : '');
+  $('oDefSel').innerHTML = ROSTER.defenders.map(d =>
+    '<option value="' + esc(d.name) + '"' + (d.name === defCur ? ' selected' : '') + '>' + esc(d.name) + '</option>'
+  ).join('');
+  $('oAttSel').innerHTML = ROSTER.attackers.map(a =>
+    '<option value="' + esc(a.name) + '"' + (a.name === attCur ? ' selected' : '') + '>' + esc(a.name) + '</option>'
+  ).join('');
+}
+function origChecks(m) {
+  return hereCheckLabel(m, 0, hereChecked(m.name, 0)) + hereCheckLabel(m, 1, hereChecked(m.name, 1));
+}
+function renderOrig() {
+  if (!$('oDefSel') || !$('oAttSel')) return;
+  populateOrigSels();
+  const d = ROSTER.defenders.find(m => m.name === $('oDefSel').value) || ROSTER.defenders[0];
+  const a = ROSTER.attackers.find(m => m.name === $('oAttSel').value) || ROSTER.attackers[0];
+  if (!d || !a) return;
+  oDef = d; oAtt = a;
+  const res = compute(a, d);
+  const dr = d.team ? (d.card / d.team) : null; // "Ratio" column, like the sheet
+  const ar = a.team ? (a.card / a.team) : null;
+  $('oDefName').textContent = d.name;
+  $('oDefChecks').innerHTML = origChecks(d);
+  $('oDefTeam').textContent = fmt(d.team);
+  $('oDefCard').textContent = fmt(d.card);
+  $('oDefRatio').textContent = dr === null ? '—' : dr.toFixed(4);
+  $('oDefEl').innerHTML = elChip(d.element);
+  $('oAttName').textContent = a.name;
+  $('oAttChecks').innerHTML = origChecks(a);
+  $('oAttTeam').textContent = fmt(a.team);
+  $('oAttCard').textContent = fmt(a.card);
+  $('oAttRatio').textContent = ar === null ? '—' : ar.toFixed(4);
+  $('oAttEl').innerHTML = elChip(a.element);
+  // Pure results — the sheet's numbers (no skill/tier adjustments).
+  [['oResTeamDeb', 'oResTeamKos', 'oResTeamFod', res.team], ['oResCardDeb', 'oResCardKos', 'oResCardFod', res.card]].forEach(pair => {
+    const r = pair[3];
+    $(pair[0]).textContent = r.ratio === null ? '—' : (r.ratio * 100).toFixed(0) + '% debuff';
+    $(pair[1]).textContent = r.kos === null ? '— KOs' : fmt(r.kos) + ' KOs';
+    $(pair[2]).textContent = r.fodder === null ? '' : fmt(r.fodder) + ' fodder · ×' + res.mult.toFixed(1) + ' element';
+  });
+  // Debuff sheet table — every 5% step, like the spreadsheet's W:X:Y block.
+  const cells = [];
+  for (let i = 1; i <= 20; i++) {
+    const pct = i * 0.05;
+    const kos = Math.min(Math.round(pct * 480), MAX_KO);
+    const fod = Math.round(kos / 6);
+    cells.push('<div class="o-cell"><span class="r">' + (pct * 100).toFixed(0) + '%</span><b class="k">' + kos + ' KOs</b><span class="f">' + fod + ' fodder</span></div>');
+  }
+  $('oTable').innerHTML = cells.join('');
+}
+$('oDefSel').addEventListener('change', () => { oDefPinned = true; renderOrig(); });
+$('oAttSel').addEventListener('change', () => { oAttPinned = true; renderOrig(); });
+
+/* ============================== GOC COUNTDOWN ============================== */
+// GOC battle window: 9:00 PM – 9:45 PM Central (CST = UTC−6). The pill is fixed
+// top-right and counts down in real time.
+const CST_OFFSET_H = 6;
+function cstSec() {
+  const d = new Date(Date.now() - CST_OFFSET_H * 3600000);
+  return d.getUTCHours() * 3600 + d.getUTCMinutes() * 60 + d.getUTCSeconds();
+}
+function fmtMMSS(t) {
+  const s = Math.max(0, Math.floor(t));
+  return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+}
+function updateGocTimer() {
+  const box = $('gocTimer'), t = $('gtTime'), s = $('gtSub');
+  if (!box || !t || !s) return;
+  const now = cstSec(), start = 21 * 3600, end = start + 45 * 60;
+  box.classList.remove('upcoming', 'running', 'ended');
+  if (now < start) {
+    box.classList.add('upcoming');
+    t.textContent = fmtMMSS(start - now);
+    s.textContent = 'starts 9:00 PM CST';
+  } else if (now <= end) {
+    box.classList.add('running');
+    t.textContent = fmtMMSS(end - now);
+    s.textContent = 'until 9:45 PM CST';
+  } else {
+    box.classList.add('ended');
+    t.textContent = '—:—';
+    s.textContent = 'ended · next 9:00 PM CST';
+  }
+}
+
+/* ============================== GOC TIME CALCULATOR ============================== */
+// Castle 2s/team · Dorms 2.5s/team · Towns 4s/team — 200 teams = 06:40 / 08:20 / 13:20.
+const TIME_RATES = { tcCastle: 2, tcDorms: 2.5, tcTowns: 4 };
+function fmtClock(sec) {
+  sec = Math.max(0, Math.round(sec));
+  return String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0');
+}
+function renderTimeCalc() {
+  Object.keys(TIME_RATES).forEach(id => {
+    const n = Math.max(0, Math.round(Number($(id).value) || 0));
+    const sec = n * TIME_RATES[id];
+    $('ts' + id.slice(2)).textContent = Math.round(sec) + ' sec';
+    $('to' + id.slice(2)).textContent = fmtClock(sec);
+  });
+}
+Object.keys(TIME_RATES).forEach(id => $(id).addEventListener('input', renderTimeCalc));
+
 /* Boot */
 function updateMeta() {
   const t = ROSTER.defenders.length + ROSTER.attackers.length;
@@ -1380,6 +1730,10 @@ function updateMeta() {
 }
 renderAll();
 updateMeta();
+setMode('player');
+updateGocTimer();
+setInterval(updateGocTimer, 1000);
+renderTimeCalc();
 </script>
 </body>
 </html>
