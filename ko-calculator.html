@@ -111,8 +111,37 @@
   footer a:hover { text-decoration: underline; }
 
   @media (max-width: 860px) {
+    .wrap { padding: 24px 16px 80px; }
+    header { flex-direction: column; align-items: stretch; gap: 12px; }
+    h1 { font-size: 24px; }
+    .toolbar { justify-content: stretch; }
+    .toolbar button { flex: 1 1 auto; }
     .inputs { grid-template-columns: 1fr; }
     .ko-summary { grid-template-columns: 1fr; }
+    .sheet-scroll { max-height: 58vh; }
+  }
+
+  /* Mobile-first polish: big tap targets, no iOS zoom-on-focus, stacked layout */
+  @media (max-width: 640px) {
+    body { -webkit-tap-highlight-color: transparent; }
+    button { touch-action: manipulation; padding: 12px 14px; }
+    select, input[type=search], input[type=text], input[type=number] { font-size: 16px; padding: 12px; }
+    .input-card { padding: 14px; }
+    .power-field input { font-size: 16px; }
+    .ko-summary { gap: 8px; }
+    .ksum { padding: 12px; }
+    .ksum .num { font-size: 20px; }
+    .sheet-card { padding: 14px; }
+    table.ko-sheet { font-size: 11.5px; }
+    table.ko-sheet th { padding: 8px 6px; font-size: 9px; }
+    table.ko-sheet td { padding: 6px; }
+    details.legend summary { padding: 12px 14px; font-size: 13px; }
+    footer { font-size: 11px; }
+  }
+
+  @media (max-width: 380px) {
+    .ksum .num { font-size: 17px; }
+    table.ko-sheet { font-size: 10.5px; }
   }
 </style>
 </head>
